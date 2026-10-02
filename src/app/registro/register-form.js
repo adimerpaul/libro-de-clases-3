@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { register } from "@/app/actions/auth";
 import { FieldError, PasswordInput, SubmitButton, inputClass } from "@/components/form-fields";
+import { PASSWORD_HINT } from "@/lib/password";
 
 export default function RegisterForm() {
   const [state, action, pending] = useActionState(register, undefined);
@@ -37,7 +38,7 @@ export default function RegisterForm() {
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-semibold">
         Contraseña
-        <PasswordInput name="password" autoComplete="new-password" placeholder="Mínimo 8 caracteres" required />
+        <PasswordInput name="password" autoComplete="new-password" placeholder={PASSWORD_HINT} required />
         <FieldError>{errors.password}</FieldError>
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-semibold">

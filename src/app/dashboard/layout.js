@@ -25,7 +25,7 @@ export default async function DashboardLayout({ children }) {
     <div className="grid min-h-screen md:grid-cols-[208px_minmax(0,1fr)]">
       <Sidebar subjects={subjects} />
       <div className="flex min-w-0 flex-col">
-        <Topbar user={{ name: user.name }} subjects={subjects} />
+        <Topbar user={{ name: user.name, email: user.email, photo: user.photo }} subjects={subjects} />
         <main className="flex flex-1 flex-col gap-3 p-3">{children}</main>
       </div>
     </div>

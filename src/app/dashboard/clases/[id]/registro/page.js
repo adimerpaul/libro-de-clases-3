@@ -69,11 +69,12 @@ export default async function LessonsPage({ params }) {
           <table className="w-full text-left text-[13px] leading-tight">
             <thead className="bg-neutral-200 text-xs text-neutral-700">
               <tr>
+                <th className="w-7" />
+                <th className="px-2 py-1.5 font-semibold">Firma</th>
                 <th className="px-2 py-1.5 font-semibold">Fecha</th>
                 <th className="px-2 py-1.5 font-semibold">Bloque</th>
-                <th className="px-2 py-1.5 font-semibold">Objetivo / actividad</th>
                 <th className="px-2 py-1.5 font-semibold">Asist.</th>
-                <th className="px-2 py-1.5 text-right font-semibold">Firma</th>
+                <th className="px-2 py-1.5 font-semibold">Objetivo / actividad</th>
               </tr>
             </thead>
             <tbody>
@@ -82,19 +83,17 @@ export default async function LessonsPage({ params }) {
                 const att = attendance.get(`${iso}-${l.block}`);
                 return (
                   <tr key={l.id} className="border-b border-neutral-200 align-top hover:bg-accent-100/50">
-                    <td className="px-2 py-1.5 whitespace-nowrap">{shortDate.format(l.date)}</td>
-                    <td className="px-2 py-1.5 whitespace-nowrap text-neutral-700">{l.block}° bloque</td>
-                    <td className="min-w-[240px] px-2 py-1.5 whitespace-pre-line">{l.topic}</td>
-                    <td className="px-2 py-1.5 whitespace-nowrap">
-                      <Link
-                        href={`${attendanceBase}?fecha=${iso}&bloque=${l.block}`}
-                        title={att ? "Ver asistencia" : "Tomar asistencia"}
-                        className="text-accent-700 hover:underline"
-                      >
-                        {att?.total ? `${att.present}/${studentCount}` : "Tomar"}
-                      </Link>
+                    <td className="w-7 py-1 pl-1">
+                      {!l.signedAt && (
+                        <LessonRowActions
+                          subjectId={subject.id}
+                          today={today}
+                          label={`${longDate.format(l.date)} · ${l.block}° bloque`}
+                          lesson={{ id: l.id, date: iso, block: l.block, topic: l.topic }}
+                        />
+                      )}
                     </td>
-                    <td className="px-2 py-1.5 text-right whitespace-nowrap">
+                    <td className="px-2 py-1.5 whitespace-nowrap">
                       {l.signedAt ? (
                         <span
                           title={`Firmada el ${stamp.format(l.signedAt)}`}
@@ -104,14 +103,21 @@ export default async function LessonsPage({ params }) {
                           Firmada
                         </span>
                       ) : (
-                        <LessonRowActions
-                          subjectId={subject.id}
-                          today={today}
-                          label={`${longDate.format(l.date)} · ${l.block}° bloque`}
-                          lesson={{ id: l.id, date: iso, block: l.block, topic: l.topic }}
-                        />
+                        <span className="rounded bg-accent2-100 px-1.5 py-0.5 text-xs text-accent2-700">Sin firmar</span>
                       )}
                     </td>
+                    <td className="px-2 py-1.5 whitespace-nowrap">{shortDate.format(l.date)}</td>
+                    <td className="px-2 py-1.5 whitespace-nowrap text-neutral-700">{l.block}° bloque</td>
+                    <td className="px-2 py-1.5 whitespace-nowrap">
+                      <Link
+                        href={`${attendanceBase}?fecha=${iso}&bloque=${l.block}`}
+                        title={att ? "Ver asistencia" : "Tomar asistencia"}
+                        className="text-accent-700 hover:underline"
+                      >
+                        {att?.total ? `${att.present}/${studentCount}` : "Tomar"}
+                      </Link>
+                    </td>
+                    <td className="min-w-[240px] px-2 py-1.5 whitespace-pre-line">{l.topic}</td>
                   </tr>
                 );
               })}

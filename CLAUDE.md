@@ -24,6 +24,7 @@ Interfaz y textos en español.
 - `DATABASE_URL="file:./prisma/dev.db"` en `.env`. Seed: `npm run db:seed` (admin@gmail.com / admin123Admin).
 - Importa siempre `db` desde `@/lib/db`, nunca un `PrismaClient` nuevo. Toda tabla lleva `deletedAt DateTime?`: el cliente extendido filtra `deletedAt: null` y convierte `delete`/`deleteMany` en soft delete. Los `include` de relaciones NO se filtran: revisa `deletedAt` a mano.
 - Auth: `src/lib/session.js`. Token aleatorio en cookie httpOnly `session`; en la tabla `tokens` solo se guarda su SHA-256. `src/proxy.js` solo comprueba que exista la cookie; la validación real es `getSession()`.
+- Contraseñas: valida siempre con `passwordError()` de `src/lib/password.js`. En desarrollo acepta cualquiera (p. ej. "123") a propósito; en producción exige 8+ caracteres con letras y números.
 
 ## Referencia de UI (`ui/`)
 - `ui/Libro de Clases.dc.html` es un mockup de todas las pantallas. Úsalo como guía de flujo, contenido y layout, no lo copies literal.

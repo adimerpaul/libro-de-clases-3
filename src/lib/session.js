@@ -45,7 +45,7 @@ export const getSession = cache(async () => {
 
   const record = await db.token.findUnique({
     where: { tokenHash: hashToken(token) },
-    include: { user: { select: { id: true, name: true, email: true, role: true, deletedAt: true } } },
+    include: { user: { select: { id: true, name: true, email: true, role: true, photo: true, deletedAt: true } } },
   });
   if (!record || record.expiresAt <= new Date() || record.user.deletedAt) return null;
 

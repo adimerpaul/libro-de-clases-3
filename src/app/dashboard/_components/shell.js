@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   ArrowsLeftRight,
@@ -9,13 +10,16 @@ import {
   ChalkboardTeacher,
   CheckSquareOffset,
   Exam,
+  List,
   Notebook,
   SignOut,
   SquaresFour,
   Student,
+  UserCircleGear,
   UsersThree,
 } from "@phosphor-icons/react";
 import { logout } from "@/app/actions/auth";
+import UserMenu from "./user-menu";
 
 // Clase activa según la URL (/dashboard/clases/:id/...).
 function useActiveSubject(subjects) {
@@ -58,13 +62,18 @@ function NavGroup({ title, children }) {
   );
 }
 
-export function Sidebar({ subjects }) {
+// En escritorio es la columna fija; con `drawer` es el contenido del menú deslizable del celular.
+export function Sidebar({ subjects, drawer = false }) {
   const pathname = usePathname();
   const active = useActiveSubject(subjects);
   const base = active ? `/dashboard/clases/${active.id}` : null;
 
   return (
-    <aside className="sticky top-0 hidden h-screen flex-col gap-3 overflow-auto bg-accent-900 px-2 py-2 text-neutral-100 md:flex">
+    <aside
+      className={`flex-col gap-3 overflow-auto bg-accent-900 px-2 py-2 text-neutral-100 ${
+        drawer ? "flex h-full" : "sticky top-0 hidden h-screen md:flex"
+      }`}
+    >
       <div className="flex items-center gap-2 rounded bg-accent-800 px-1.5 py-1">
         <span className="grid size-6 flex-none place-items-center rounded bg-accent text-sm">
           <BookOpenText weight="duotone" />
@@ -77,6 +86,12 @@ export function Sidebar({ subjects }) {
 
       <NavGroup title="General">
         <NavItem href="/dashboard" icon={ChalkboardTeacher} label="Mis clases" active={pathname === "/dashboard"} />
+        <NavItem
+          href="/dashboard/perfil"
+          icon={UserCircleGear}
+          label="Mi perfil"
+          active={pathname === "/dashboard/perfil"}
+        />
       </NavGroup>
 
       {active && (
@@ -138,25 +153,57 @@ export function Sidebar({ subjects }) {
   );
 }
 
-function initials(name) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase())
-    .join("");
-}
-
 const SCREEN_TITLES = { estudiantes: "Lista de estudiantes", asistencia: "Toma de asistencia", registro: "Registro de clases", calificaciones: "Calificaciones", actividades: "Calendario de actividades", familiares: "Antecedentes familiares" };
+
+// Botón ☰ (solo celular, a la izquierda) que abre el menú lateral como cajón.
+function MobileNav({ subjects }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const dialog = ref.current;
+    if (open && !dialog.open) dialog.showModal();
+    if (!open && dialog.open) dialog.close();
+  }, [open]);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="Abrir menú"
+        title="Menú"
+        className="-ml-2 grid size-9 flex-none place-items-center rounded text-2xl text-accent-800 hover:bg-accent-100 md:hidden"
+      >
+        <List weight="bold" />
+      </button>
+      <dialog
+        ref={ref}
+        onClose={() => setOpen(false)}
+        // Cierra al tocar el fondo o al elegir una opción del menú.
+        onClick={(e) => (e.target === ref.current || e.target.closest("a")) && setOpen(false)}
+        className="m-0 h-dvh max-h-none w-64 max-w-[80vw] bg-accent-900 p-0 backdrop:bg-ink/40"
+      >
+        {open && <Sidebar subjects={subjects} drawer />}
+      </dialog>
+    </>
+  );
+}
 
 export function Topbar({ user, subjects }) {
   const pathname = usePathname();
   const active = useActiveSubject(subjects);
   const screen = pathname.match(/^\/dashboard\/clases\/\d+\/([^/]+)/)?.[1];
-  const title = active ? (SCREEN_TITLES[screen] ?? "Resumen de la clase") : "Mis clases";
+  const title = active
+    ? (SCREEN_TITLES[screen] ?? "Resumen de la clase")
+    : pathname === "/dashboard/perfil"
+      ? "Mi perfil"
+      : "Mis clases";
   const label = active ? `${active.name} · ${active.course}` : null;
 
   return (
     <header className="sticky top-0 z-10 flex items-center gap-2 bg-neutral-100 px-4 py-1.5 shadow-sm">
+      <MobileNav subjects={subjects} />
       <div className="flex min-w-0 flex-col leading-tight">
         <span className="truncate text-[11px] text-neutral-700">{label ?? "Inicio"}</span>
         <span className="text-[15px] font-semibold whitespace-nowrap">
@@ -175,17 +222,7 @@ export function Topbar({ user, subjects }) {
           <ArrowsLeftRight weight="duotone" className="text-neutral-700" />
         </Link>
       )}
-      <div className="flex items-center gap-1.5 rounded-full bg-neutral-200 py-0.5 pr-2.5 pl-0.5">
-        <span className="grid size-6 place-items-center rounded-full bg-accent text-[10px] font-semibold text-neutral-100">
-          {initials(user.name)}
-        </span>
-        <span className="hidden text-xs whitespace-nowrap sm:inline">{user.name}</span>
-      </div>
-      <form action={logout} className="md:hidden">
-        <button type="submit" title="Cerrar sesión" className="text-xl">
-          <SignOut weight="duotone" />
-        </button>
-      </form>
+      <UserMenu user={user} />
     </header>
   );
 }

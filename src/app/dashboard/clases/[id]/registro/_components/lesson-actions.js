@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { PencilSimple, Plus, Signature, Trash } from "@phosphor-icons/react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { DotsThreeVertical, PencilSimple, Plus, Signature, Trash } from "@phosphor-icons/react";
 import { deleteLesson, saveLesson, signLesson } from "@/app/actions/lessons";
 import Modal from "@/components/modal";
 import { FieldError, FormError, inputClass } from "@/components/form-fields";
@@ -125,28 +125,72 @@ export function NewLessonButton({ subjectId, today }) {
   );
 }
 
-// Botones de una fila sin firmar: firmar, editar y eliminar.
+function MenuItem({ icon: Icon, children, danger, ...props }) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] ${
+        danger ? "text-accent2-700 hover:bg-accent2-100" : "hover:bg-accent-100"
+      }`}
+      {...props}
+    >
+      <Icon weight="duotone" className="text-[15px]" />
+      {children}
+    </button>
+  );
+}
+
+// Menú ⋮ de una fila sin firmar (primera columna, a mano en el celular): firmar, editar y eliminar.
+// Popover nativo: vive en la capa superior, así el overflow de la tabla no lo recorta.
 export function LessonRowActions({ subjectId, lesson, label, today }) {
   const [mode, setMode] = useState(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef(null);
+  const menuRef = useRef(null);
   const close = () => setMode(null);
-  const icon = "grid size-7 place-items-center rounded text-base text-neutral-700 hover:bg-accent-100 hover:text-accent-700";
+
+  function toggle() {
+    const r = buttonRef.current.getBoundingClientRect();
+    setPos({ top: r.bottom + 2, left: r.left });
+    menuRef.current.togglePopover();
+  }
+  const open = (m) => () => {
+    menuRef.current.hidePopover();
+    setMode(m);
+  };
 
   return (
-    <div className="flex items-center justify-end gap-1">
+    <>
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setMode("sign")}
-        className="flex items-center gap-1 rounded border border-neutral-300 px-2 py-0.5 text-xs font-semibold hover:bg-accent-100"
+        onClick={toggle}
+        title="Opciones"
+        aria-label={`Opciones de la clase del ${label}`}
+        aria-haspopup="menu"
+        className="grid size-7 place-items-center rounded text-base text-neutral-700 hover:bg-accent-100 hover:text-accent-700"
       >
-        <Signature weight="duotone" className="text-sm text-accent" />
-        Firmar
+        <DotsThreeVertical weight="bold" />
       </button>
-      <button type="button" title="Editar" aria-label="Editar" onClick={() => setMode("edit")} className={icon}>
-        <PencilSimple weight="duotone" />
-      </button>
-      <button type="button" title="Eliminar" aria-label="Eliminar" onClick={() => setMode("delete")} className={icon}>
-        <Trash weight="duotone" />
-      </button>
+      <div
+        ref={menuRef}
+        popover="auto"
+        role="menu"
+        style={{ position: "fixed", inset: "auto", top: pos.top, left: pos.left, margin: 0 }}
+        className="w-40 rounded-lg border border-neutral-300 bg-neutral-100 p-1 text-ink shadow-lg"
+      >
+        <MenuItem icon={Signature} onClick={open("sign")}>
+          Firmar clase
+        </MenuItem>
+        <MenuItem icon={PencilSimple} onClick={open("edit")}>
+          Editar
+        </MenuItem>
+        <div className="my-1 border-t border-neutral-300" />
+        <MenuItem icon={Trash} danger onClick={open("delete")}>
+          Eliminar
+        </MenuItem>
+      </div>
 
       <Modal open={mode === "sign"} onClose={close} title="Firmar clase" className="max-w-sm">
         <ConfirmForm fn={signLesson} lesson={lesson} onDone={close} label="Firmar" pendingLabel="Firmando…">
@@ -167,6 +211,6 @@ export function LessonRowActions({ subjectId, lesson, label, today }) {
           </p>
         </ConfirmForm>
       </Modal>
-    </div>
+    </>
   );
 }

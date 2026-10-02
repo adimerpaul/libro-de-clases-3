@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { createSession, deleteSession } from "@/lib/session";
 import { DEFAULT_SUBJECT, defaultStudents } from "@/lib/catalog";
 import { seedDemoClass } from "@/lib/demo-data";
+import { passwordError } from "@/lib/password";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -18,9 +19,8 @@ export async function register(prevState, formData) {
   const errors = {};
   if (name.length < 3) errors.name = "Ingresa tu nombre completo.";
   if (!EMAIL_RE.test(email)) errors.email = "Ingresa un correo válido.";
-  if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-    errors.password = "Mínimo 8 caracteres, con letras y números.";
-  }
+  const pwError = passwordError(password);
+  if (pwError) errors.password = pwError;
   if (password !== confirm) errors.confirm = "Las contraseñas no coinciden.";
   if (Object.keys(errors).length) return { name, email, errors };
 

@@ -121,7 +121,7 @@ export default async function SubjectSummaryPage({ params }) {
 
   const now = new Date();
   const monthStart = new Date(`${todayISO(now).slice(0, 7)}-01T00:00:00Z`);
-  const [students, monthSessions, upcoming, evaluations] = await Promise.all([
+  const [students, monthSessions, upcoming, evaluations, lessonCount, unsignedLessons] = await Promise.all([
     db.student.findMany({
       where: { subjectId: subject.id },
       orderBy: { listNumber: "asc" },
@@ -144,6 +144,8 @@ export default async function SubjectSummaryPage({ params }) {
       where: { subjectId: subject.id },
       include: { grades: { where: { deletedAt: null }, select: { studentId: true, value: true } } },
     }),
+    db.lesson.count({ where: { subjectId: subject.id } }),
+    db.lesson.count({ where: { subjectId: subject.id, signedAt: null } }),
   ]);
   // Igual que la planilla: promedio de los promedios de cada estudiante.
   const studentAverages = students.map((st) =>
@@ -242,9 +244,13 @@ export default async function SubjectSummaryPage({ params }) {
         <Kpi
           icon={Signature}
           label="Clases sin firmar"
-          value="—"
-          note="Aún sin clases registradas"
-          tone="accent2"
+          value={lessonCount ? unsignedLessons : "—"}
+          note={
+            lessonCount
+              ? `De ${lessonCount} ${lessonCount === 1 ? "clase registrada" : "clases registradas"}`
+              : "Aún sin clases registradas"
+          }
+          tone={unsignedLessons ? "accent2" : "neutral"}
         />
       </div>
 
