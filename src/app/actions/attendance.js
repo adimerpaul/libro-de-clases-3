@@ -45,17 +45,17 @@ export async function markAttendance(subjectId, day, block, marks) {
   const existing = await db.attendanceSession.findUnique({ where: key });
   if (existing?.signedAt) return { error: "Esta asistencia ya fue firmada." };
 
-  await db.$transaction(async (tx) => {
-    const session =
-      existing ?? (await tx.attendanceSession.upsert({ where: key, create: key.subjectId_date_block, update: {} }));
-    for (const [studentId, status] of entries) {
-      await tx.attendanceRecord.upsert({
+  const session =
+    existing ?? (await db.attendanceSession.upsert({ where: key, create: key.subjectId_date_block, update: {} }));
+  await db.$transaction(
+    entries.map(([studentId, status]) =>
+      db.attendanceRecord.upsert({
         where: { sessionId_studentId: { sessionId: session.id, studentId } },
         create: { sessionId: session.id, studentId, status },
         update: { status },
-      });
-    }
-  });
+      }),
+    ),
+  );
 
   refresh(subject.id);
   return { ok: true };
