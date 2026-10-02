@@ -16,6 +16,8 @@ model User {
   email     String    @unique
   password  String
   role      String    @default("docente")
+  // Nombre del archivo WebP en storage/fotos/usuarios (se sirve por /api/fotos/usuarios).
+  photo     String?
   tokens    Token[]
   subjects  Subject[]
   createdAt DateTime  @default(now())
@@ -45,35 +47,187 @@ model Token {
 
 // Materia/clase que dicta un usuario: asignatura + curso (p. ej. Matemática · 1° Medio A).
 model Subject {
-  id        Int       @id @default(autoincrement())
-  name      String
-  course    String
-  schedule  String?
-  userId    Int
-  user      User      @relation(fields: [userId], references: [id])
-  students  Student[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  course             String
+  schedule           String?
+  userId             Int
+  user               User                @relation(fields: [userId], references: [id])
+  students           Student[]
+  attendanceSessions AttendanceSession[]
+  activities         Activity[]
+  lessons            Lesson[]
+  evaluations        Evaluation[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
 
   @@index([userId])
   @@map("subjects")
 }
 
 model Student {
-  id             Int       @id @default(autoincrement())
+  id             Int                @id @default(autoincrement())
   subjectId      Int
-  subject        Subject   @relation(fields: [subjectId], references: [id])
+  subject        Subject            @relation(fields: [subjectId], references: [id])
   listNumber     Int
   firstName      String
   lastName       String
   secondLastName String?
   rut            String?
   birthDate      DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  // Nombre del archivo WebP en storage/fotos/estudiantes (privado, se sirve por /api/fotos).
+  photo          String?
+  attendance     AttendanceRecord[]
+  family         FamilyRecord?
+  grades         Grade[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
   deletedAt      DateTime?
 
   @@index([subjectId])
   @@map("students")
+}
+
+// Toma de asistencia de una clase en un día y bloque. Una vez firmada (signedAt) no se edita.
+model AttendanceSession {
+  id        Int                @id @default(autoincrement())
+  subjectId Int
+  subject   Subject            @relation(fields: [subjectId], references: [id])
+  // Día de la clase a medianoche UTC (como birthDate).
+  date      DateTime
+  block     Int                @default(1)
+  signedAt  DateTime?
+  records   AttendanceRecord[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  deletedAt DateTime?
+
+  @@unique([subjectId, date, block])
+  @@map("attendance_sessions")
+}
+
+model AttendanceRecord {
+  id        Int               @id @default(autoincrement())
+  sessionId Int
+  session   AttendanceSession @relation(fields: [sessionId], references: [id])
+  studentId Int
+  student   Student           @relation(fields: [studentId], references: [id])
+  // P = presente, T = atrasado, A = ausente.
+  status    String
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  deletedAt DateTime?
+
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+  @@map("attendance_records")
+}
+
+// Registro de clase (leccionario): qué se hizo en un día y bloque. Una vez firmada (signedAt) no se edita.
+// Sin @@unique([subjectId, date, block]): una fila borrada (soft delete) bloquearía volver a registrar ese bloque;
+// la unicidad entre filas vivas se valida en src/app/actions/lessons.js.
+model Lesson {
+  id        Int       @id @default(autoincrement())
+  subjectId Int
+  subject   Subject   @relation(fields: [subjectId], references: [id])
+  // Día de la clase a medianoche UTC (como AttendanceSession.date).
+  date      DateTime
+  block     Int       @default(1)
+  // Objetivo de aprendizaje y actividad realizada.
+  topic     String
+  signedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([subjectId, date])
+  @@map("lessons")
+}
+
+// Evento del calendario de una clase: evaluación, reunión, entrega, salida, feriado o plazo.
+model Activity {
+  id        Int       @id @default(autoincrement())
+  subjectId Int
+  subject   Subject   @relation(fields: [subjectId], references: [id])
+  // Día a medianoche UTC (como birthDate).
+  date      DateTime
+  title     String
+  kind      String
+  // Hora, sala, contenidos u otros detalles en texto libre.
+  detail    String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([subjectId, date])
+  @@map("activities")
+}
+
+// Evaluación calificada de una clase (una columna N1, N2… de la planilla de notas).
+model Evaluation {
+  id        Int       @id @default(autoincrement())
+  subjectId Int
+  subject   Subject   @relation(fields: [subjectId], references: [id])
+  title     String
+  // Día a medianoche UTC (como birthDate). Opcional.
+  date      DateTime?
+  // Orden de la columna; define N1, N2…
+  position  Int
+  grades    Grade[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([subjectId])
+  @@map("evaluations")
+}
+
+// Nota de 1,0 a 7,0 (ver src/lib/grades.js). Borrar = soft delete; volver a ponerla
+// reutiliza la misma fila vía upsert, por eso el @@unique no choca con el soft delete.
+model Grade {
+  id           Int        @id @default(autoincrement())
+  evaluationId Int
+  evaluation   Evaluation @relation(fields: [evaluationId], references: [id])
+  studentId    Int
+  student      Student    @relation(fields: [studentId], references: [id])
+  value        Float
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  @@unique([evaluationId, studentId])
+  @@index([studentId])
+  @@map("grades")
+}
+
+// Antecedentes familiares del estudiante (1 a 1): apoderados, domicilio y salud.
+// Nunca se borra: se edita en su lugar (studentId es único).
+model FamilyRecord {
+  id                   Int       @id @default(autoincrement())
+  studentId            Int       @unique
+  student              Student   @relation(fields: [studentId], references: [id])
+  guardianName         String?
+  guardianRelation     String?
+  guardianPhone        String?
+  guardianEmail        String?
+  guardianOccupation   String?
+  substituteName       String?
+  substituteRelation   String?
+  substitutePhone      String?
+  substituteOccupation String?
+  address              String?
+  commune              String?
+  region               String?
+  livesWith            String?
+  health               String?
+  healthInsurance      String?
+  priority             Boolean   @default(false)
+  pie                  Boolean   @default(false)
+  emergencyPhone       String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  deletedAt            DateTime?
+
+  @@map("family_records")
 }

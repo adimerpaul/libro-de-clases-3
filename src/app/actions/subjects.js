@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
@@ -20,5 +21,7 @@ export async function createSubject(prevState, formData) {
   const subject = await db.subject.create({
     data: { name, course, schedule, userId: session.user.id },
   });
+  // El layout del dashboard lista las clases para el menú: hay que refrescarlo.
+  revalidatePath("/dashboard", "layout");
   redirect(`/dashboard/clases/${subject.id}`);
 }

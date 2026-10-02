@@ -23,10 +23,10 @@ function useActiveSubject(subjects) {
   return match ? subjects.find((s) => s.id === Number(match[1])) : null;
 }
 
-function NavItem({ href, icon: Icon, label, active }) {
-  const base = "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm";
+function NavItem({ href, icon: Icon, label, active, badge }) {
+  const base = "flex w-full items-center gap-2 rounded px-1.5 py-1 text-left text-[13px] leading-tight";
   const iconBox = (
-    <span className="grid size-[26px] flex-none place-items-center rounded-sm bg-accent-800 text-base">
+    <span className="grid size-5 flex-none place-items-center rounded-sm text-[15px]">
       <Icon weight="duotone" />
     </span>
   );
@@ -41,15 +41,18 @@ function NavItem({ href, icon: Icon, label, active }) {
   return (
     <Link href={href} className={`${base} ${active ? "bg-accent" : "hover:bg-accent-700"}`}>
       {iconBox}
-      {label}
+      <span className="flex-1">{label}</span>
+      {badge ? (
+        <span className="rounded-full bg-accent2 px-1.5 text-[10px] leading-4 font-semibold text-white">{badge}</span>
+      ) : null}
     </Link>
   );
 }
 
 function NavGroup({ title, children }) {
   return (
-    <div className="flex flex-col gap-[3px]">
-      <div className="px-2 pb-1 text-[10px] tracking-widest text-accent-200 uppercase">{title}</div>
+    <div className="flex flex-col gap-px">
+      <div className="truncate px-1.5 pb-0.5 text-[10px] tracking-widest text-accent-200 uppercase">{title}</div>
       {children}
     </div>
   );
@@ -61,14 +64,14 @@ export function Sidebar({ subjects }) {
   const base = active ? `/dashboard/clases/${active.id}` : null;
 
   return (
-    <aside className="sticky top-0 hidden h-screen flex-col gap-5 overflow-auto bg-accent-900 px-4 py-5 text-neutral-100 md:flex">
-      <div className="flex items-center gap-2 rounded-lg bg-accent-800 p-2">
-        <span className="grid size-9 flex-none place-items-center rounded-lg bg-accent text-xl">
+    <aside className="sticky top-0 hidden h-screen flex-col gap-3 overflow-auto bg-accent-900 px-2 py-2 text-neutral-100 md:flex">
+      <div className="flex items-center gap-2 rounded bg-accent-800 px-1.5 py-1">
+        <span className="grid size-6 flex-none place-items-center rounded bg-accent text-sm">
           <BookOpenText weight="duotone" />
         </span>
         <span className="flex flex-col leading-tight">
-          <span className="font-semibold">Libro de Clases 3.0</span>
-          <span className="text-[11px] text-accent-200">Año escolar 2026</span>
+          <span className="text-[13px] font-semibold">Libro de Clases 3.0</span>
+          <span className="text-[10px] text-accent-200">Año escolar 2026</span>
         </span>
       </div>
 
@@ -78,24 +81,55 @@ export function Sidebar({ subjects }) {
 
       {active && (
         <NavGroup title={`Mi clase · ${active.course}`}>
-          <NavItem icon={SquaresFour} label="Resumen" />
-          <NavItem href={base} icon={Student} label="Estudiantes" active={pathname === base} />
-          <NavItem icon={Notebook} label="Registro de clases" />
-          <NavItem icon={CheckSquareOffset} label="Asistencia" />
-          <NavItem icon={Exam} label="Calificaciones" />
-          <NavItem icon={CalendarDots} label="Actividades" />
-          <NavItem icon={UsersThree} label="Antecedentes familiares" />
+          <NavItem href={base} icon={SquaresFour} label="Resumen" active={pathname === base} />
+          <NavItem
+            href={`${base}/estudiantes`}
+            icon={Student}
+            label="Estudiantes"
+            active={pathname === `${base}/estudiantes`}
+          />
+          <NavItem
+            href={`${base}/registro`}
+            icon={Notebook}
+            label="Registro de clases"
+            active={pathname === `${base}/registro`}
+            badge={active.unsignedLessons}
+          />
+          <NavItem
+            href={`${base}/asistencia`}
+            icon={CheckSquareOffset}
+            label="Asistencia"
+            active={pathname === `${base}/asistencia`}
+          />
+          <NavItem
+            href={`${base}/calificaciones`}
+            icon={Exam}
+            label="Calificaciones"
+            active={pathname === `${base}/calificaciones`}
+          />
+          <NavItem
+            href={`${base}/actividades`}
+            icon={CalendarDots}
+            label="Actividades"
+            active={pathname === `${base}/actividades`}
+          />
+          <NavItem
+            href={`${base}/familiares`}
+            icon={UsersThree}
+            label="Antecedentes familiares"
+            active={pathname === `${base}/familiares`}
+          />
         </NavGroup>
       )}
 
-      <div className="mt-auto flex flex-col gap-2">
-        <div className="px-2 text-[11px] text-accent-200">Libro de Clases 3.0 · 2026</div>
+      <div className="mt-auto flex flex-col gap-1">
+        
         <form action={logout}>
           <button
             type="submit"
-            className="flex w-full items-center gap-2 rounded-lg border border-accent-700 px-2 py-2.5 text-sm hover:bg-accent-800"
+            className="flex w-full items-center gap-2 rounded px-1.5 py-1 text-[13px] hover:bg-accent-800"
           >
-            <SignOut weight="duotone" className="text-lg" />
+            <SignOut weight="duotone" className="text-[15px]" />
             Cerrar sesión
           </button>
         </form>
@@ -112,16 +146,21 @@ function initials(name) {
     .join("");
 }
 
+const SCREEN_TITLES = { estudiantes: "Lista de estudiantes", asistencia: "Toma de asistencia", registro: "Registro de clases", calificaciones: "Calificaciones", actividades: "Calendario de actividades", familiares: "Antecedentes familiares" };
+
 export function Topbar({ user, subjects }) {
+  const pathname = usePathname();
   const active = useActiveSubject(subjects);
+  const screen = pathname.match(/^\/dashboard\/clases\/\d+\/([^/]+)/)?.[1];
+  const title = active ? (SCREEN_TITLES[screen] ?? "Resumen de la clase") : "Mis clases";
   const label = active ? `${active.name} · ${active.course}` : null;
 
   return (
-    <header className="sticky top-0 z-10 flex items-center gap-3 bg-neutral-100 px-6 py-3 shadow-sm md:px-8">
+    <header className="sticky top-0 z-10 flex items-center gap-2 bg-neutral-100 px-4 py-1.5 shadow-sm">
       <div className="flex min-w-0 flex-col leading-tight">
-        <span className="truncate text-xs text-neutral-700">{label ?? "Inicio"}</span>
-        <span className="text-lg font-semibold whitespace-nowrap">
-          {active ? "Lista de estudiantes" : "Mis clases"}
+        <span className="truncate text-[11px] text-neutral-700">{label ?? "Inicio"}</span>
+        <span className="text-[15px] font-semibold whitespace-nowrap">
+          {title}
         </span>
       </div>
       <div className="flex-1" />
@@ -129,18 +168,18 @@ export function Topbar({ user, subjects }) {
         <Link
           href="/dashboard"
           title="Cambiar de clase"
-          className="hidden items-center gap-2 rounded border border-neutral-300 px-3 py-2 text-sm hover:bg-accent-100 lg:flex"
+          className="hidden items-center gap-1.5 rounded border border-neutral-300 px-2 py-1 text-xs hover:bg-accent-100 lg:flex"
         >
-          <ChalkboardTeacher weight="duotone" className="text-lg text-accent" />
+          <ChalkboardTeacher weight="duotone" className="text-sm text-accent" />
           {label}
           <ArrowsLeftRight weight="duotone" className="text-neutral-700" />
         </Link>
       )}
-      <div className="flex items-center gap-2 rounded-full bg-neutral-200 py-1 pr-3 pl-1">
-        <span className="grid size-[30px] place-items-center rounded-full bg-accent text-xs font-semibold text-neutral-100">
+      <div className="flex items-center gap-1.5 rounded-full bg-neutral-200 py-0.5 pr-2.5 pl-0.5">
+        <span className="grid size-6 place-items-center rounded-full bg-accent text-[10px] font-semibold text-neutral-100">
           {initials(user.name)}
         </span>
-        <span className="hidden text-sm whitespace-nowrap sm:inline">{user.name}</span>
+        <span className="hidden text-xs whitespace-nowrap sm:inline">{user.name}</span>
       </div>
       <form action={logout} className="md:hidden">
         <button type="submit" title="Cerrar sesión" className="text-xl">

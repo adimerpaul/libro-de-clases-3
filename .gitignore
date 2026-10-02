@@ -45,3 +45,6 @@ next-env.d.ts
 # sqlite
 /prisma/*.db
 /prisma/*.db-journal
+
+# fotos subidas (datos de estudiantes, no versionar)
+/storage/

@@ -8,18 +8,25 @@ export default async function DashboardLayout({ children }) {
   if (!session) redirect("/login");
   const { user } = session;
 
-  // Lista liviana para que el menú sepa nombre y curso de la clase activa.
-  const subjects = await db.subject.findMany({
+  // Lista liviana para que el menú sepa nombre y curso de la clase activa,
+  // y cuántas clases tiene sin firmar (contador de «Registro de clases»).
+  const rows = await db.subject.findMany({
     where: { userId: user.id },
-    select: { id: true, name: true, course: true },
+    select: {
+      id: true,
+      name: true,
+      course: true,
+      _count: { select: { lessons: { where: { signedAt: null, deletedAt: null } } } },
+    },
   });
+  const subjects = rows.map(({ _count, ...s }) => ({ ...s, unsignedLessons: _count.lessons }));
 
   return (
-    <div className="grid min-h-screen md:grid-cols-[252px_minmax(0,1fr)]">
+    <div className="grid min-h-screen md:grid-cols-[208px_minmax(0,1fr)]">
       <Sidebar subjects={subjects} />
       <div className="flex min-w-0 flex-col">
         <Topbar user={{ name: user.name }} subjects={subjects} />
-        <main className="flex flex-1 flex-col gap-5 px-6 pt-5 pb-10 md:px-8">{children}</main>
+        <main className="flex flex-1 flex-col gap-3 p-3">{children}</main>
       </div>
     </div>
   );

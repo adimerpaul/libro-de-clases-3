@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "../src/generated/prisma/client.ts";
 import { DEFAULT_SUBJECT, defaultStudents } from "../src/lib/catalog.js";
+import { fillDemoForUser } from "./demo.mjs";
 
 const prisma = new PrismaClient({
   adapter: new PrismaBetterSqlite3({ url: process.env.DATABASE_URL }),
@@ -28,4 +29,7 @@ if (!hasSubjects) {
   });
   console.log(`Clase por defecto creada: ${DEFAULT_SUBJECT.name} · ${DEFAULT_SUBJECT.course}`);
 }
+
+// Igual que al registrarse: datos de ejemplo en todos los módulos (solo si la clase está vacía).
+console.log(`Datos de ejemplo: ${await fillDemoForUser(prisma, admin.id)}`);
 await prisma.$disconnect();

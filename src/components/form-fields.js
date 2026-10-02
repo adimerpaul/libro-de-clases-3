@@ -4,11 +4,11 @@ import { useState } from "react";
 import { Eye, EyeSlash } from "@phosphor-icons/react";
 
 export const inputClass =
-  "w-full rounded border border-neutral-300 bg-neutral-100 px-3 py-2.5 outline-none focus:border-accent";
+  "w-full rounded border border-neutral-300 bg-paper px-2 py-1.5 text-sm outline-none focus:border-accent";
 
 export function FieldError({ children }) {
   if (!children) return null;
-  return <span className="text-sm font-normal text-accent2-700">{children}</span>;
+  return <span className="text-xs font-normal text-accent2-700">{children}</span>;
 }
 
 export function FormError({ children }) {
@@ -47,7 +47,7 @@ export function SubmitButton({ pending, children, pendingText }) {
     <button
       type="submit"
       disabled={pending}
-      className="rounded bg-accent px-4 py-3 font-semibold text-white hover:bg-accent-600 active:bg-accent-700 disabled:opacity-45"
+      className="rounded bg-accent px-4 py-2 font-semibold text-white hover:bg-accent-600 active:bg-accent-700 disabled:opacity-45"
     >
       {pending ? pendingText : children}
     </button>

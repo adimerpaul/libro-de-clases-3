@@ -12,7 +12,7 @@ export default async function RegisterPage() {
   return (
     <AuthShell
       title="Crear cuenta"
-      subtitle="Te crearemos una clase de Matemática de ejemplo para que empieces."
+      subtitle="Te crearemos una clase de Matemática de ejemplo, con estudiantes, asistencia, notas, actividades y fichas familiares, para que veas cómo funciona todo."
     >
       <RegisterForm />
       <p className="text-center text-sm text-neutral-700">

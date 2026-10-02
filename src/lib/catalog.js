@@ -67,6 +67,15 @@ export function formatRut(body) {
   return `${body.toLocaleString("es-CL")}-${rutDv(body)}`;
 }
 
+// "21.123.456-k", "211234567K", etc. → "21.123.456-K", o null si el DV no cuadra.
+export function normalizeRut(input) {
+  const clean = String(input).replace(/[.\-\s]/g, "").toUpperCase();
+  const match = clean.match(/^(\d{7,8})([\dK])$/);
+  if (!match) return null;
+  const body = Number(match[1]);
+  return rutDv(body) === match[2] ? formatRut(body) : null;
+}
+
 // Lista de estudiantes de ejemplo, determinista (mismos datos en cada registro).
 export function defaultStudents() {
   let seed = 7;

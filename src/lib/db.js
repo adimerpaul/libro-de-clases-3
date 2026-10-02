@@ -59,7 +59,16 @@ function createClient() {
   });
 }
 
-// Reutiliza el cliente entre recargas de `next dev`.
+// Reutiliza el cliente entre recargas de `next dev`, salvo que `prisma generate`
+// haya producido un PrismaClient nuevo (si no, el cliente cacheado no conoce los
+// modelos nuevos: "Unknown argument `subjects`").
 const globalForPrisma = globalThis;
+if (globalForPrisma.prismaClass !== PrismaClient) {
+  globalForPrisma.prisma?.$disconnect();
+  globalForPrisma.prisma = undefined;
+}
 export const db = globalForPrisma.prisma ?? createClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = db;
+  globalForPrisma.prismaClass = PrismaClient;
+}

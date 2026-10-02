@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { createSession, deleteSession } from "@/lib/session";
 import { DEFAULT_SUBJECT, defaultStudents } from "@/lib/catalog";
+import { seedDemoClass } from "@/lib/demo-data";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -23,18 +24,26 @@ export async function register(prevState, formData) {
   if (password !== confirm) errors.confirm = "Las contraseñas no coinciden.";
   if (Object.keys(errors).length) return { name, email, errors };
 
+  const hashed = await bcrypt.hash(password, 10);
   let user;
   try {
-    // Escritura anidada = una sola transacción: usuario + clase por defecto + estudiantes.
-    user = await db.user.create({
-      data: {
-        name,
-        email,
-        password: await bcrypt.hash(password, 10),
-        subjects: {
-          create: { ...DEFAULT_SUBJECT, students: { create: defaultStudents() } },
+    // Una sola transacción: usuario + clase por defecto + estudiantes + datos de ejemplo
+    // en todos los módulos (si algo falla, no queda una cuenta a medias).
+    user = await db.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashed,
+          subjects: {
+            create: { ...DEFAULT_SUBJECT, students: { create: defaultStudents() } },
+          },
         },
-      },
+        include: { subjects: { include: { students: { orderBy: { listNumber: "asc" } } } } },
+      });
+      const [subject] = created.subjects;
+      await seedDemoClass(tx, subject.id, subject.students);
+      return created;
     });
   } catch (e) {
     // P2002 = email único (incluye usuarios con soft delete).
