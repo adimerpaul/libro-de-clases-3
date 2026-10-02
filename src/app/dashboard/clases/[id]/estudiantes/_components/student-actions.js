@@ -6,15 +6,9 @@ import { deleteStudent, saveStudent } from "@/app/actions/students";
 import Modal from "@/components/modal";
 import { FieldError, FormError, inputClass } from "@/components/form-fields";
 import StudentAvatar from "./student-avatar";
-
-export const MAX_PHOTO_MB = 5;
-
-// Validación en el navegador (el servidor vuelve a validar).
-export function checkPhotoFile(file) {
-  if (!file.type.startsWith("image/")) return "El archivo debe ser una imagen.";
-  if (file.size > MAX_PHOTO_MB * 1024 * 1024) return `La foto no puede superar ${MAX_PHOTO_MB} MB.`;
-  return null;
-}
+import { useWebpPhoto } from "@/components/use-webp-photo";
+import { MAX_SOURCE_MB } from "@/lib/webp-client";
+import { studentFullName } from "@/lib/catalog";
 
 // ¿El arrastre trae archivos? (no reaccionar a texto o enlaces arrastrados).
 export function isFileDrag(e) {
@@ -33,16 +27,13 @@ function Field({ label, error, className = "", children }) {
 
 function StudentForm({ subjectId, student, onDone }) {
   const [state, action, pending] = useActionState(saveStudent, undefined);
-  const [preview, setPreview] = useState(null);
   const [removePhoto, setRemovePhoto] = useState(false);
-  const [photoError, setPhotoError] = useState(null);
   const [dragging, setDragging] = useState(false);
-  const fileRef = useRef(null);
+  const { photoRef, preview, error: photoError, converting, pick: pickWebp, reset: resetPhoto } = useWebpPhoto();
 
   useEffect(() => {
     if (state?.ok) onDone();
   }, [state, onDone]);
-  useEffect(() => () => preview && URL.revokeObjectURL(preview), [preview]);
 
   const v = state?.values ?? {
     firstName: student?.firstName ?? "",
@@ -54,28 +45,14 @@ function StudentForm({ subjectId, student, onDone }) {
   const errors = state?.errors ?? {};
 
   function pickPhoto(file) {
-    setPhotoError(null);
-    if (!file) return setPreview(null);
-    const error = checkPhotoFile(file);
-    if (error) {
-      fileRef.current.value = "";
-      setPreview(null);
-      return setPhotoError(error);
-    }
     setRemovePhoto(false);
-    setPreview(URL.createObjectURL(file));
+    pickWebp(file); // convierte a WebP y lo deja en el input oculto "photo"
   }
 
   function onDrop(e) {
     e.preventDefault();
     setDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
-    // Mete el archivo soltado en el <input type=file> para que viaje con el formulario.
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    fileRef.current.files = dt.files;
-    pickPhoto(file);
+    pickPhoto(e.dataTransfer.files?.[0]);
   }
 
   const showCurrent = student?.photo && !removePhoto && !preview;
@@ -113,15 +90,19 @@ function StudentForm({ subjectId, student, onDone }) {
           </span>
           <label className="w-fit cursor-pointer rounded border border-neutral-300 bg-neutral-100 px-2 py-1 font-semibold hover:bg-accent-100">
             {student?.photo || preview ? "Cambiar foto" : "Elegir archivo"}
+            {/* Sin name: la imagen original no se envía, solo el WebP del input oculto. */}
             <input
-              ref={fileRef}
-              name="photo"
               type="file"
               accept="image/*"
-              onChange={(e) => pickPhoto(e.target.files?.[0])}
+              onChange={(e) => {
+                pickPhoto(e.target.files?.[0]);
+                e.target.value = "";
+              }}
               className="sr-only"
             />
           </label>
+          <input ref={photoRef} type="file" name="photo" hidden />
+          {converting && <span className="text-accent-700">Convirtiendo a WebP…</span>}
           {student?.photo && !preview && (
             <label className="flex items-center gap-1 text-neutral-700">
               <input
@@ -133,7 +114,7 @@ function StudentForm({ subjectId, student, onDone }) {
               Quitar foto
             </label>
           )}
-          <span className="text-neutral-500">JPG, PNG o WebP hasta {MAX_PHOTO_MB} MB · se guarda como WebP</span>
+          <span className="text-neutral-500">JPG, PNG o WebP hasta {MAX_SOURCE_MB} MB · se guarda como WebP 400×400</span>
           <FieldError>{photoError ?? errors.photo}</FieldError>
         </div>
       </div>
@@ -143,7 +124,7 @@ function StudentForm({ subjectId, student, onDone }) {
           <input name="firstName" defaultValue={v.firstName} required className={inputClass} />
         </Field>
         <Field label="Apellido paterno" error={errors.lastName}>
-          <input name="lastName" defaultValue={v.lastName} required className={inputClass} />
+          <input name="lastName" defaultValue={v.lastName} className={inputClass} />
         </Field>
         <Field label="Apellido materno">
           <input name="secondLastName" defaultValue={v.secondLastName ?? ""} className={inputClass} />
@@ -164,7 +145,7 @@ function StudentForm({ subjectId, student, onDone }) {
         </button>
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || converting}
           className="rounded bg-accent px-3 py-1.5 font-semibold text-white hover:bg-accent-600 disabled:opacity-45"
         >
           {pending ? "Guardando…" : student ? "Guardar cambios" : "Matricular"}
@@ -205,7 +186,7 @@ function DeleteForm({ student, onDone }) {
       <p>
         ¿Eliminar a{" "}
         <strong>
-          {student.firstName} {student.lastName} {student.secondLastName}
+          {studentFullName(student)}
         </strong>{" "}
         de la clase? Su registro queda archivado y no se borra definitivamente.
       </p>

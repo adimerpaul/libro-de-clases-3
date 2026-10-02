@@ -1,7 +1,7 @@
 "use server";
 
-import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
+import { hashPassword, needsRehash, verifyPassword } from "@/lib/hash";
 import { db } from "@/lib/db";
 import { createSession, deleteSession } from "@/lib/session";
 import { DEFAULT_SUBJECT, defaultStudents } from "@/lib/catalog";
@@ -24,33 +24,27 @@ export async function register(prevState, formData) {
   if (password !== confirm) errors.confirm = "Las contraseñas no coinciden.";
   if (Object.keys(errors).length) return { name, email, errors };
 
-  const hashed = await bcrypt.hash(password, 10);
   let user;
   try {
-    // Una sola transacción: usuario + clase por defecto + estudiantes + datos de ejemplo
-    // en todos los módulos (si algo falla, no queda una cuenta a medias).
-    user = await db.$transaction(async (tx) => {
-      const created = await tx.user.create({
-        data: {
-          name,
-          email,
-          password: hashed,
-          subjects: {
-            create: { ...DEFAULT_SUBJECT, students: { create: defaultStudents() } },
-          },
-        },
-        include: { subjects: { include: { students: { orderBy: { listNumber: "asc" } } } } },
-      });
-      const [subject] = created.subjects;
-      await seedDemoClass(tx, subject.id, subject.students);
-      return created;
-    });
+    user = await db.user.create({ data: { name, email, password: await hashPassword(password) } });
   } catch (e) {
     // P2002 = email único (incluye usuarios con soft delete).
     if (e?.code === "P2002") {
       return { name, email, errors: { email: "Ese correo ya está registrado." } };
     }
     throw e;
+  }
+
+  // Clase de ejemplo con estudiantes y datos en todos los módulos. Cloudflare D1 no tiene
+  // transacciones: si algo falla aquí la cuenta ya existe y sigue siendo usable, así que
+  // solo se registra el error (el docente puede crear sus clases a mano).
+  try {
+    const subject = await db.subject.create({ data: { ...DEFAULT_SUBJECT, userId: user.id } });
+    await db.student.createMany({ data: defaultStudents().map((st) => ({ ...st, subjectId: subject.id })) });
+    const students = await db.student.findMany({ where: { subjectId: subject.id }, orderBy: { listNumber: "asc" } });
+    await seedDemoClass(db, subject.id, students);
+  } catch (e) {
+    console.error("No se pudieron crear los datos de ejemplo del usuario", user.id, e);
   }
 
   await createSession(user.id);
@@ -67,9 +61,13 @@ export async function login(prevState, formData) {
 
   // El soft delete de db.js excluye usuarios eliminados.
   const user = await db.user.findUnique({ where: { email } });
-  const ok = user && (await bcrypt.compare(password, user.password));
+  const ok = user && (await verifyPassword(password, user.password));
   if (!ok) {
     return { email, error: "Correo o contraseña incorrectos." };
+  }
+  // Hashes antiguos (bcrypt) se migran a PBKDF2 al iniciar sesión.
+  if (needsRehash(user.password)) {
+    await db.user.update({ where: { id: user.id }, data: { password: await hashPassword(password) } });
   }
 
   await createSession(user.id);

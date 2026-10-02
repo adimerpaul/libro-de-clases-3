@@ -1,6 +1,15 @@
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
+  // Cloudflare Workers (OpenNext) y `next dev`. Los scripts de Node usan `nodeClient`.
+  runtime  = "workerd"
+}
+
+// Mismo esquema para los scripts de Node (prisma/*.mjs: seed, demo), que no corren en workerd.
+generator nodeClient {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma-node"
+  runtime  = "nodejs"
 }
 
 datasource db {

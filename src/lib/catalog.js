@@ -88,3 +88,20 @@ export function defaultStudents() {
     return { listNumber: i + 1, firstName, lastName, secondLastName, rut: formatRut(body), birthDate };
   });
 }
+
+// Ambos apellidos son opcionales (hay estudiantes sin paterno o sin materno);
+// lastName se guarda como "" si falta. Estos helpers evitan espacios y comas sueltas.
+export function studentSurnames(st) {
+  return [st.lastName, st.secondLastName].filter(Boolean).join(" ");
+}
+
+// "Apellidos, Nombres" para listas ordenadas por apellido.
+export function studentListName(st) {
+  const surnames = studentSurnames(st);
+  return surnames ? `${surnames}, ${st.firstName}` : st.firstName;
+}
+
+// "Nombres Apellidos" para textos corridos.
+export function studentFullName(st) {
+  return [st.firstName, studentSurnames(st)].filter(Boolean).join(" ");
+}

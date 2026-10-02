@@ -19,7 +19,7 @@ export default function StudentAvatar({ student, size = 24 }) {
       className="grid flex-none place-items-center rounded-full bg-accent-100 font-semibold text-accent-800"
     >
       {student.firstName[0]}
-      {student.lastName[0]}
+      {(student.lastName || student.secondLastName)?.[0]}
     </span>
   );
 }

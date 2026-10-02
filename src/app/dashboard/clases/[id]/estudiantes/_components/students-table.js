@@ -12,7 +12,9 @@ import {
 } from "@phosphor-icons/react";
 import { setStudentPhoto } from "@/app/actions/students";
 import StudentAvatar from "./student-avatar";
-import { StudentModals, checkPhotoFile, isFileDrag } from "./student-actions";
+import { StudentModals, isFileDrag } from "./student-actions";
+import { checkSourceImage, toWebpFile } from "@/lib/webp-client";
+import { studentFullName, studentListName } from "@/lib/catalog";
 
 const dateFmt = new Intl.DateTimeFormat("es-CL", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
 
@@ -55,7 +57,7 @@ function RowMenu({ student, onEdit, onDelete, onPickPhoto, onRemovePhoto }) {
         type="button"
         onClick={toggle}
         title="Opciones"
-        aria-label={`Opciones de ${student.firstName} ${student.lastName}`}
+        aria-label={`Opciones de ${studentFullName(student)}`}
         aria-haspopup="menu"
         className="grid size-6 place-items-center rounded text-base text-neutral-700 hover:bg-accent-100 hover:text-accent-700"
       >
@@ -99,14 +101,20 @@ function StudentRow({ subjectId, student }) {
   function upload(file, remove = false) {
     setError(null);
     if (!remove) {
-      const problem = checkPhotoFile(file);
+      const problem = checkSourceImage(file);
       if (problem) return setError(problem);
     }
-    const fd = new FormData();
-    fd.set("id", student.id);
-    if (remove) fd.set("remove", "on");
-    else fd.set("photo", file);
     startTransition(async () => {
+      const fd = new FormData();
+      fd.set("id", student.id);
+      if (remove) fd.set("remove", "on");
+      else {
+        try {
+          fd.set("photo", await toWebpFile(file)); // WebP 400×400 hecho en el navegador
+        } catch (e) {
+          return setError(e.message);
+        }
+      }
       const res = await setStudentPhoto(fd);
       if (res?.error) setError(res.error);
     });
@@ -170,7 +178,7 @@ function StudentRow({ subjectId, student }) {
             )}
           </span>
           <span className="truncate">
-            {student.lastName} {student.secondLastName}, {student.firstName}
+            {studentListName(student)}
           </span>
           {dragging && (
             <span className="flex items-center gap-1 text-xs text-accent-800">

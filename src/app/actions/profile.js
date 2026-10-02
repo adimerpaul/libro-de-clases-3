@@ -1,12 +1,12 @@
 "use server";
 
-import bcrypt from "bcryptjs";
+import { hashPassword, verifyPassword } from "@/lib/hash";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { passwordError } from "@/lib/password";
-import { MAX_PHOTO_BYTES, photoToWebp, removePhoto, writePhoto } from "@/lib/photos";
+import { readUploadedPhoto, removePhoto, writePhoto } from "@/lib/photos";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,19 +27,10 @@ export async function updateProfile(prevState, formData) {
   else if (name.length > 80) errors.name = "Máximo 80 caracteres.";
   if (!EMAIL_RE.test(email)) errors.email = "Ingresa un correo válido.";
 
-  let webp = null;
-  const file = formData.get("photo");
-  if (file && typeof file !== "string" && file.size > 0) {
-    if (!file.type.startsWith("image/")) errors.photo = "El archivo debe ser una imagen.";
-    else if (file.size > MAX_PHOTO_BYTES) errors.photo = "La foto no puede superar 5 MB.";
-    else {
-      try {
-        webp = await photoToWebp(file);
-      } catch {
-        errors.photo = "No se pudo leer la imagen. Prueba con JPG, PNG o WebP.";
-      }
-    }
-  }
+  // WebP convertido en el navegador; aquí se valida (tipo real, tamaño, sin EXIF).
+  const photo = await readUploadedPhoto(formData);
+  if (photo.error) errors.photo = photo.error;
+  const webp = photo.webp ?? null;
   if (Object.keys(errors).length) return { values: { name, email }, errors };
 
   const data = { name, email };
@@ -78,11 +69,11 @@ export async function changePassword(prevState, formData) {
   if (Object.keys(errors).length) return { errors };
 
   const { password: hash } = await db.user.findUnique({ where: { id: user.id }, select: { password: true } });
-  if (!(await bcrypt.compare(current, hash))) {
+  if (!(await verifyPassword(current, hash))) {
     return { errors: { current: "La contraseña actual no es correcta." } };
   }
 
-  await db.user.update({ where: { id: user.id }, data: { password: await bcrypt.hash(next, 10) } });
+  await db.user.update({ where: { id: user.id }, data: { password: await hashPassword(next) } });
   // Soft delete de los demás tokens: quien tuviera tu contraseña anterior queda fuera.
   const { count } = await db.token.deleteMany({ where: { userId: user.id, id: { not: tokenId } } });
 

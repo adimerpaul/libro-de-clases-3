@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { requireSession } from "@/lib/session";
 import GradesSheet from "./_components/grades-sheet";
+import { studentListName } from "@/lib/catalog";
 
 export const metadata = { title: "Calificaciones · Libro de Clases 3.0" };
 
 export default async function GradesPage({ params }) {
   const { id } = await params;
-  const { user } = await getSession();
+  const { user } = await requireSession();
 
   // Filtra por userId: un docente solo ve sus propias clases.
   const subject = await db.subject.findFirst({ where: { id: Number(id) || -1, userId: user.id } });
@@ -36,7 +37,7 @@ export default async function GradesPage({ params }) {
       students={students.map((st) => ({
         id: st.id,
         listNumber: st.listNumber,
-        name: `${st.lastName} ${st.secondLastName ?? ""}, ${st.firstName}`.replace(" ,", ","),
+        name: studentListName(st),
       }))}
       evaluations={evaluations.map((ev) => ({
         id: ev.id,

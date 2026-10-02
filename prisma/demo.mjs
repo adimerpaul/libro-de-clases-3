@@ -1,12 +1,11 @@
 // Carga datos de ejemplo (asistencia, registro, notas, actividades, antecedentes familiares)
 // en la primera clase de un usuario que ya existe:
-//   npm run db:demo -- correo@ejemplo.cl
+//   npm run db:demo -- correo@ejemplo.cl            (base D1 local)
+//   npm run db:demo -- correo@ejemplo.cl --remote   (producción, ver prisma/d1.mjs)
 // Solo escribe si esa clase está vacía en todos esos módulos (no duplica ni pisa datos reales).
-import "dotenv/config";
 import { pathToFileURL } from "node:url";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { PrismaClient } from "../src/generated/prisma/client.ts";
 import { seedDemoClass } from "../src/lib/demo-data.js";
+import { openDb } from "./d1.mjs";
 
 export async function fillDemoForUser(prisma, userId) {
   const subject = await prisma.subject.findFirst({
@@ -30,19 +29,19 @@ export async function fillDemoForUser(prisma, userId) {
   const filled = Object.entries(counts).filter(([, n]) => n > 0).map(([k]) => k);
   if (filled.length) return `la clase ${subject.name} · ${subject.course} ya tiene datos en: ${filled.join(", ")} (no se tocó)`;
 
-  await prisma.$transaction((tx) => seedDemoClass(tx, subject.id, subject.students));
+  await seedDemoClass(prisma, subject.id, subject.students);
   return `datos de ejemplo cargados en ${subject.name} · ${subject.course}`;
 }
 
 // Ejecución directa: node prisma/demo.mjs <correo>
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const email = process.argv[2]?.trim().toLowerCase();
+  const email = process.argv.slice(2).find((a) => !a.startsWith("--"))?.trim().toLowerCase();
   if (!email) {
     console.error("Uso: npm run db:demo -- correo@ejemplo.cl");
     process.exit(1);
   }
-  const prisma = new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: process.env.DATABASE_URL }) });
+  const { prisma, close } = await openDb();
   const user = await prisma.user.findFirst({ where: { email, deletedAt: null } });
   console.log(user ? `${email}: ${await fillDemoForUser(prisma, user.id)}` : `No existe el usuario ${email}`);
-  await prisma.$disconnect();
+  await close();
 }

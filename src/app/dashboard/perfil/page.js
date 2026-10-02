@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { requireSession } from "@/lib/session";
 import { PasswordForm, ProfileForm } from "./_components/profile-forms";
 
 export const metadata = { title: "Mi perfil · Libro de Clases 3.0" };
@@ -24,7 +24,7 @@ function Section({ title, subtitle, children }) {
 }
 
 export default async function ProfilePage() {
-  const { user, tokenId } = await getSession();
+  const { user, tokenId } = await requireSession();
 
   const [account, subjectCount, sessions] = await Promise.all([
     db.user.findUnique({ where: { id: user.id }, select: { createdAt: true } }),

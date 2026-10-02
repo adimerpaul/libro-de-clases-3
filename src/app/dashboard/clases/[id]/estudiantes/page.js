@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { MagnifyingGlass } from "@phosphor-icons/react/ssr";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { requireSession } from "@/lib/session";
 import { NewStudentButton } from "./_components/student-actions";
 import StudentsTable from "./_components/students-table";
 
@@ -10,7 +10,7 @@ export const metadata = { title: "Estudiantes · Libro de Clases 3.0" };
 export default async function SubjectStudentsPage({ params, searchParams }) {
   const { id } = await params;
   const { q = "" } = await searchParams;
-  const { user } = await getSession();
+  const { user } = await requireSession();
 
   // Filtra por userId: un docente solo ve sus propias clases.
   const subject = await db.subject.findFirst({

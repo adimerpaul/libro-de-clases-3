@@ -12,7 +12,7 @@ import {
   UsersThree,
 } from "@phosphor-icons/react/ssr";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { requireSession } from "@/lib/session";
 import {
   attendancePct,
   countStatuses,
@@ -22,6 +22,7 @@ import {
 import { KIND_STYLES } from "@/lib/activities";
 import { average, formatGrade, isFailing } from "@/lib/grades";
 import StudentAvatar from "./estudiantes/_components/student-avatar";
+import { studentFullName, studentListName } from "@/lib/catalog";
 
 export const metadata = { title: "Resumen de la clase · Libro de Clases 3.0" };
 
@@ -111,7 +112,7 @@ const MODULES = [
 
 export default async function SubjectSummaryPage({ params }) {
   const { id } = await params;
-  const { user } = await getSession();
+  const { user } = await requireSession();
 
   // Filtra por userId: un docente solo ve sus propias clases.
   const subject = await db.subject.findFirst({
@@ -288,7 +289,7 @@ export default async function SubjectSummaryPage({ params }) {
                 {students.map((st) => (
                   <span
                     key={st.id}
-                    title={`${st.listNumber}. ${st.firstName} ${st.lastName}`}
+                    title={`${st.listNumber}. ${studentFullName(st)}`}
                   >
                     <StudentAvatar student={st} size={30} />
                   </span>
@@ -305,7 +306,7 @@ export default async function SubjectSummaryPage({ params }) {
                   >
                     <StudentAvatar student={st} />
                     <span className="min-w-0 flex-1 truncate">
-                      {st.lastName} {st.secondLastName}, {st.firstName}
+                      {studentListName(st)}
                     </span>
                     <span className="text-xs text-neutral-700">
                       N° {st.listNumber}

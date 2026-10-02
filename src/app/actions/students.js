@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { normalizeRut } from "@/lib/catalog";
-import { MAX_PHOTO_BYTES, photoToWebp, removePhoto, writePhoto } from "@/lib/photos";
+import { readUploadedPhoto, removePhoto, writePhoto } from "@/lib/photos";
 
 async function requireUser() {
   const session = await getSession();
@@ -40,8 +40,8 @@ function readFields(formData) {
   };
 
   const errors = {};
+  // Los apellidos son opcionales: hay estudiantes sin paterno o sin materno.
   if (!values.firstName) errors.firstName = "Ingresa los nombres.";
-  if (!values.lastName) errors.lastName = "Ingresa el apellido paterno.";
 
   let rut = null;
   if (values.rut) {
@@ -67,18 +67,8 @@ function readFields(formData) {
   return { values, data, errors };
 }
 
-// Valida y convierte la foto antes de tocar la BD. Devuelve { webp } o { error }.
-async function readPhoto(formData) {
-  const file = formData.get("photo");
-  if (!file || typeof file === "string" || file.size === 0) return {};
-  if (!file.type.startsWith("image/")) return { error: "El archivo debe ser una imagen." };
-  if (file.size > MAX_PHOTO_BYTES) return { error: "La foto no puede superar 5 MB." };
-  try {
-    return { webp: await photoToWebp(file) };
-  } catch {
-    return { error: "No se pudo leer la imagen. Prueba con JPG, PNG o WebP." };
-  }
-}
+// Valida la foto (WebP convertido en el navegador) antes de tocar la BD. Devuelve {}, { webp } o { error }.
+const readPhoto = (formData) => readUploadedPhoto(formData);
 
 // Crea (sin `id`) o actualiza (con `id`) un estudiante, con foto opcional.
 export async function saveStudent(prevState, formData) {

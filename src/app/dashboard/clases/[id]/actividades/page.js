@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { requireSession } from "@/lib/session";
 import { todayISO } from "@/lib/attendance";
 import { monthGrid, monthKey, parseMonth, shiftMonth } from "@/lib/activities";
 import ActivityBoard from "./_components/activity-board";
@@ -12,7 +12,7 @@ const monthFmt = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeri
 export default async function ActivitiesPage({ params, searchParams }) {
   const { id } = await params;
   const { mes } = await searchParams;
-  const { user } = await getSession();
+  const { user } = await requireSession();
 
   // Filtra por userId: un docente solo ve sus propias clases.
   const subject = await db.subject.findFirst({ where: { id: Number(id) || -1, userId: user.id } });

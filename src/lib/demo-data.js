@@ -152,34 +152,37 @@ export function buildDemoData(students, now = new Date()) {
   return { lessons, attendance, evaluations, activities, family };
 }
 
-// Escribe los datos de ejemplo en la clase. `client` puede ser `db`, un `tx` de
-// $transaction o el PrismaClient del seed.
+// Escribe los datos de ejemplo en la clase. `client` puede ser `db` o el PrismaClient de los scripts.
+// Todo va en inserciones agrupadas (~13 consultas): Cloudflare D1 permite 50 consultas por
+// petición en el plan gratuito y el registro hace esto dentro de la misma petición.
 export async function seedDemoClass(client, subjectId, students, now = new Date()) {
   const data = buildDemoData(students, now);
+  const slotKey = (date, block) => `${date.toISOString()}#${block}`;
 
   await client.lesson.createMany({ data: data.lessons.map((l) => ({ ...l, subjectId })) });
-  for (const s of data.attendance) {
-    await client.attendanceSession.create({
-      data: {
-        subjectId,
-        date: s.date,
-        block: s.block,
-        signedAt: s.signedAt,
-        records: { createMany: { data: s.records } },
-      },
-    });
-  }
-  for (const ev of data.evaluations) {
-    await client.evaluation.create({
-      data: {
-        subjectId,
-        title: ev.title,
-        date: ev.date,
-        position: ev.position,
-        grades: { createMany: { data: ev.grades } },
-      },
-    });
-  }
+
+  const sessions = await client.attendanceSession.createManyAndReturn({
+    data: data.attendance.map(({ records, ...s }) => ({ ...s, subjectId })),
+    select: { id: true, date: true, block: true },
+  });
+  const sessionId = new Map(sessions.map((s) => [slotKey(s.date, s.block), s.id]));
+  await client.attendanceRecord.createMany({
+    data: data.attendance.flatMap((s) =>
+      s.records.map((r) => ({ ...r, sessionId: sessionId.get(slotKey(s.date, s.block)) })),
+    ),
+  });
+
+  const evaluations = await client.evaluation.createManyAndReturn({
+    data: data.evaluations.map(({ grades, ...ev }) => ({ ...ev, subjectId })),
+    select: { id: true, position: true },
+  });
+  const evaluationId = new Map(evaluations.map((ev) => [ev.position, ev.id]));
+  await client.grade.createMany({
+    data: data.evaluations.flatMap((ev) =>
+      ev.grades.map((g) => ({ ...g, evaluationId: evaluationId.get(ev.position) })),
+    ),
+  });
+
   await client.activity.createMany({ data: data.activities.map((a) => ({ ...a, subjectId })) });
   await client.familyRecord.createMany({ data: data.family });
 }

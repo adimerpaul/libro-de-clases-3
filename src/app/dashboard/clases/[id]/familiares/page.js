@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FirstAidKit, HouseLine, User, UserCircle, UsersThree } from "@phosphor-icons/react/ssr";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { requireSession } from "@/lib/session";
 import { FAMILY_BOOLEANS, FAMILY_TEXTS } from "@/lib/family";
 import StudentAvatar from "../estudiantes/_components/student-avatar";
 import EditFamilyButton from "./_components/family-form";
+import { studentListName } from "@/lib/catalog";
 
 export const metadata = { title: "Antecedentes familiares · Libro de Clases 3.0" };
 
@@ -39,7 +40,7 @@ function Card({ icon: Icon, role, title, badge, rows }) {
 export default async function FamilyPage({ params, searchParams }) {
   const { id } = await params;
   const { estudiante } = await searchParams;
-  const { user } = await getSession();
+  const { user } = await requireSession();
 
   // Filtra por userId: un docente solo ve sus propias clases.
   const subject = await db.subject.findFirst({ where: { id: Number(id) || -1, userId: user.id } });
@@ -89,7 +90,7 @@ export default async function FamilyPage({ params, searchParams }) {
             >
               <span className="w-5 flex-none text-right text-xs text-neutral-700">{st.listNumber}</span>
               <span className="flex-1 truncate">
-                {st.lastName} {st.secondLastName}, {st.firstName}
+                {studentListName(st)}
               </span>
               {!withGuardian.has(st.id) && (
                 <span title="Sin apoderado registrado" className="size-1.5 flex-none rounded-full bg-accent2" />

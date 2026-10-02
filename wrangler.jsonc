@@ -1,0 +1,32 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "libro-de-clases-3",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      // Base SQLite de la app (Cloudflare D1). Créala con:
+      //   npx wrangler d1 create libro-de-clases
+      // y pega aquí el database_id que imprime. En local (next dev) se usa una copia
+      // en .wrangler/state, sin necesidad del id real.
+      "binding": "DB",
+      "database_name": "libro-de-clases",
+      "database_id": "REEMPLAZAR-CON-EL-ID-DE-wrangler-d1-create",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      // Fotos de estudiantes y usuarios (privadas: se sirven por /api/fotos con sesión).
+      // Créalo con: npx wrangler r2 bucket create libro-de-clases-fotos
+      "binding": "PHOTOS",
+      "bucket_name": "libro-de-clases-fotos"
+    }
+  ],
+  "observability": { "enabled": true }
+}

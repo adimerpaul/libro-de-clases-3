@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Notebook, SealCheck } from "@phosphor-icons/react/ssr";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { requireSession } from "@/lib/session";
 import { todayISO } from "@/lib/attendance";
 import { LessonRowActions, NewLessonButton } from "./_components/lesson-actions";
 
@@ -14,7 +14,7 @@ const stamp = new Intl.DateTimeFormat("es-CL", { dateStyle: "short", timeStyle: 
 
 export default async function LessonsPage({ params }) {
   const { id } = await params;
-  const { user } = await getSession();
+  const { user } = await requireSession();
 
   // Filtra por userId: un docente solo ve sus propias clases.
   const subject = await db.subject.findFirst({ where: { id: Number(id) || -1, userId: user.id } });

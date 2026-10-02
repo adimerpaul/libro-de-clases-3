@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Clock, Compass, Function as FunctionIcon, Student } from "@phosphor-icons/react/ssr";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { requireSession } from "@/lib/session";
 import CreateClassDialog from "./_components/create-class-dialog";
 
 export const metadata = { title: "Mis clases · Libro de Clases 3.0" };
@@ -9,7 +9,7 @@ export const metadata = { title: "Mis clases · Libro de Clases 3.0" };
 const SUBJECT_ICONS = { Matemática: FunctionIcon, Orientación: Compass };
 
 export default async function DashboardPage() {
-  const { user } = await getSession();
+  const { user } = await requireSession();
 
   const subjects = await db.subject.findMany({
     where: { userId: user.id },

@@ -2,6 +2,7 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 
 export const SESSION_COOKIE = "session";
@@ -51,6 +52,15 @@ export const getSession = cache(async () => {
 
   return { tokenId: record.id, user: record.user };
 });
+
+// Para páginas protegidas: devuelve la sesión o redirige a /login.
+// (El layout del dashboard también valida, pero Next renderiza layout y página en
+// paralelo, así que cada página debe protegerse por sí misma.)
+export async function requireSession() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  return session;
+}
 
 // Soft delete del token actual y borrado de la cookie.
 export async function deleteSession() {

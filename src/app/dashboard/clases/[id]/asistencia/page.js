@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { requireSession } from "@/lib/session";
 import { attendancePct, countStatuses, formatPct, parseBlock, parseDay, todayISO } from "@/lib/attendance";
 import AttendanceSheet from "./_components/attendance-sheet";
 import SlotPicker from "./_components/slot-picker";
+import { studentListName } from "@/lib/catalog";
 
 export const metadata = { title: "Asistencia · Libro de Clases 3.0" };
 
@@ -14,7 +15,7 @@ const shortDate = new Intl.DateTimeFormat("es-CL", { weekday: "short", day: "2-d
 export default async function AttendancePage({ params, searchParams }) {
   const { id } = await params;
   const { fecha, bloque } = await searchParams;
-  const { user } = await getSession();
+  const { user } = await requireSession();
 
   // Filtra por userId: un docente solo ve sus propias clases.
   const subject = await db.subject.findFirst({ where: { id: Number(id) || -1, userId: user.id } });
@@ -54,7 +55,7 @@ export default async function AttendancePage({ params, searchParams }) {
         students={students.map((st) => ({
           id: st.id,
           listNumber: st.listNumber,
-          name: `${st.lastName} ${st.secondLastName ?? ""}, ${st.firstName}`.replace(" ,", ","),
+          name: studentListName(st),
           firstName: st.firstName,
           lastName: st.lastName,
           photo: st.photo,

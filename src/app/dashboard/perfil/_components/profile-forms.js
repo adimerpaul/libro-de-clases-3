@@ -6,8 +6,8 @@ import { changePassword, updateProfile } from "@/app/actions/profile";
 import { FieldError, FormError, PasswordInput, inputClass } from "@/components/form-fields";
 import { PASSWORD_HINT } from "@/lib/password";
 import { UserAvatar } from "../../_components/user-menu";
-
-const MAX_PHOTO_MB = 5;
+import { useWebpPhoto } from "@/components/use-webp-photo";
+import { MAX_SOURCE_MB } from "@/lib/webp-client";
 
 function Field({ label, error, children }) {
   return (
@@ -42,42 +42,29 @@ function SaveButton({ pending, children }) {
 }
 
 export function ProfileForm({ user }) {
-  const [preview, setPreview] = useState(null);
   const [removePhoto, setRemovePhoto] = useState(false);
-  const [photoError, setPhotoError] = useState(null);
   const [dragging, setDragging] = useState(false);
-  const fileRef = useRef(null);
+  const pickerRef = useRef(null);
+  const { photoRef, preview, error: photoError, converting, pick: pickWebp, reset: resetPhoto } = useWebpPhoto();
   const [state, action, pending] = useActionState(async (prev, formData) => {
     const res = await updateProfile(prev, formData);
     if (res?.ok) {
       // La foto nueva ya viene en `user`: se limpia la vista previa y el input.
-      if (fileRef.current) fileRef.current.value = "";
-      setPreview(null);
+      resetPhoto();
       setRemovePhoto(false);
     }
     return res;
   }, undefined);
 
-  useEffect(() => () => preview && URL.revokeObjectURL(preview), [preview]);
-
   function pickPhoto(file) {
-    setPhotoError(null);
-    if (!file) return setPreview(null);
-    if (!file.type.startsWith("image/")) return setPhotoError("El archivo debe ser una imagen.");
-    if (file.size > MAX_PHOTO_MB * 1024 * 1024) return setPhotoError(`La foto no puede superar ${MAX_PHOTO_MB} MB.`);
     setRemovePhoto(false);
-    setPreview(URL.createObjectURL(file));
+    pickWebp(file); // convierte a WebP y lo deja en el input oculto "photo"
   }
 
   function onDrop(e) {
     e.preventDefault();
     setDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    fileRef.current.files = dt.files; // viaja con el formulario
-    pickPhoto(file);
+    pickPhoto(e.dataTransfer.files?.[0]);
   }
 
   const shown = removePhoto ? { ...user, photo: null } : user;
@@ -103,7 +90,7 @@ export function ProfileForm({ user }) {
           <span className="text-neutral-700">{dragging ? "Suelta la imagen aquí" : "Arrastra una foto aquí o"}</span>
           <button
             type="button"
-            onClick={() => fileRef.current?.click()}
+            onClick={() => pickerRef.current?.click()}
             className="flex items-center gap-1.5 rounded border border-neutral-300 bg-neutral-100 px-2 py-1 font-semibold hover:bg-accent-100"
           >
             <Camera weight="duotone" />
@@ -120,17 +107,22 @@ export function ProfileForm({ user }) {
               Quitar foto
             </label>
           )}
-          <span className="text-neutral-500">JPG, PNG o WebP hasta {MAX_PHOTO_MB} MB · se guarda como WebP</span>
+          {converting && <span className="text-accent-700">Convirtiendo a WebP…</span>}
+          <span className="text-neutral-500">JPG, PNG o WebP hasta {MAX_SOURCE_MB} MB · se guarda como WebP 400×400</span>
           <FieldError>{photoError ?? errors.photo}</FieldError>
         </div>
+        {/* Sin name: la imagen original no se envía, solo el WebP del input oculto. */}
         <input
-          ref={fileRef}
+          ref={pickerRef}
           type="file"
-          name="photo"
           accept="image/*"
           className="hidden"
-          onChange={(e) => pickPhoto(e.target.files?.[0])}
+          onChange={(e) => {
+            pickPhoto(e.target.files?.[0]);
+            e.target.value = "";
+          }}
         />
+        <input ref={photoRef} type="file" name="photo" hidden />
       </div>
 
       <Field label="Nombre completo" error={errors.name}>
@@ -142,7 +134,7 @@ export function ProfileForm({ user }) {
 
       <FormError>{state?.error}</FormError>
       <Success>{state?.ok && state.message}</Success>
-      <SaveButton pending={pending || Boolean(photoError)}>Guardar datos</SaveButton>
+      <SaveButton pending={pending || converting}>Guardar datos</SaveButton>
     </form>
   );
 }

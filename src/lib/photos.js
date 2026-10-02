@@ -1,45 +1,44 @@
 import "server-only";
-import path from "node:path";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import sharp from "sharp";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { inspectWebp } from "@/lib/webp";
 
-// Fuera de public/: son fotos de personas (menores incluidos) y solo se sirven con sesión
-// (ver src/app/api/fotos/). Carpetas: "estudiantes" y "usuarios".
-const PHOTO_ROOT = path.join(process.cwd(), "storage", "fotos");
+// Fotos de personas (menores incluidos) en el bucket R2 privado `PHOTOS` (wrangler.jsonc).
+// Solo se sirven con sesión (ver src/app/api/fotos/). Carpetas: "estudiantes" y "usuarios".
 const FOLDERS = new Set(["estudiantes", "usuarios"]);
 
-function photoDir(folder) {
-  if (!FOLDERS.has(folder)) throw new Error(`Carpeta de fotos inválida: ${folder}`);
-  return path.join(PHOTO_ROOT, folder);
+function bucket() {
+  return getCloudflareContext().env.PHOTOS;
 }
 
-export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+function keyFor(folder, name) {
+  if (!FOLDERS.has(folder)) throw new Error(`Carpeta de fotos inválida: ${folder}`);
+  // basename: el nombre viene de la BD, pero nunca dejamos que salga de su carpeta.
+  return `${folder}/${String(name).split(/[\\/]/).pop()}`;
+}
 
-// Convierte cualquier imagen subida a WebP cuadrado de 400px.
-// sharp descarta los metadatos EXIF (GPS, cámara) por defecto.
-// Lanza un error si el archivo no es una imagen válida.
-export async function photoToWebp(file) {
-  const input = Buffer.from(await file.arrayBuffer());
-  return sharp(input, { limitInputPixels: 50_000_000 })
-    .rotate() // respeta la orientación EXIF antes de descartarla
-    .resize(400, 400, { fit: "cover", position: "attention" })
-    .webp({ quality: 80 })
-    .toBuffer();
+// Lee la foto subida en `formData[field]`: debe ser el WebP que genera el navegador
+// (src/lib/webp-client.js). Devuelve {} si no vino archivo, { webp } o { error }.
+export async function readUploadedPhoto(formData, field = "photo") {
+  const file = formData.get(field);
+  if (!file || typeof file === "string" || file.size === 0) return {};
+  const webp = new Uint8Array(await file.arrayBuffer());
+  const check = inspectWebp(webp);
+  return check.error ? { error: check.error } : { webp };
 }
 
 // Guarda con nombre único (sirve también para invalidar caché del navegador).
 export async function writePhoto(ownerId, webp, folder = "estudiantes") {
-  const dir = photoDir(folder);
-  await mkdir(dir, { recursive: true });
   const name = `${ownerId}-${Date.now()}.webp`;
-  await writeFile(path.join(dir, name), webp);
+  await bucket().put(keyFor(folder, name), webp, { httpMetadata: { contentType: "image/webp" } });
   return name;
 }
 
 export async function removePhoto(name, folder = "estudiantes") {
-  if (name) await rm(path.join(photoDir(folder), path.basename(name)), { force: true });
+  if (name) await bucket().delete(keyFor(folder, name));
 }
 
-export function readPhoto(name, folder = "estudiantes") {
-  return readFile(path.join(photoDir(folder), path.basename(name)));
+// Devuelve el cuerpo (ReadableStream) o null si no existe.
+export async function readPhoto(name, folder = "estudiantes") {
+  const object = await bucket().get(keyFor(folder, name));
+  return object?.body ?? null;
 }
