@@ -2,7 +2,6 @@ import "server-only";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { PrismaD1 } from "@prisma/adapter-d1";
 import { PrismaClient } from "@/generated/prisma/client";
-
 // Lecturas que deben ignorar los registros con soft delete.
 const READ_OPS = new Set([
   "findUnique",
