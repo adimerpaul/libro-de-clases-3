@@ -16,7 +16,7 @@
       // en .wrangler/state, sin necesidad del id real.
       "binding": "DB",
       "database_name": "libro-de-clases",
-      "database_id": "REEMPLAZAR-CON-EL-ID-DE-wrangler-d1-create",
+      "database_id": "0a91d622-0064-4384-95e1-a645501c92b5",
       "migrations_dir": "migrations"
     }
   ],
