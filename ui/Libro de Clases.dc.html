@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/broadsheet-01d58ce5-9a71-4b4e-896b-bca795933b3f/styles.css">
+<script src="_ds/broadsheet-01d58ce5-9a71-4b4e-896b-bca795933b3f/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<style>body{margin:0;background:var(--color-bg)}.btn,.tag{white-space:nowrap}a{color:var(--color-accent)}a:hover{color:var(--color-accent-600)}</style>
+</helmet>
+
+<sc-if value="{{ showLogin }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Login" style="min-height:100vh;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,1fr);font-family:var(--font-body);color:var(--color-text);background:var(--color-bg)">
+  <div style="background:var(--color-accent-900);color:var(--color-neutral-100);padding:var(--space-8) calc(var(--space-8) * 1.5);display:flex;flex-direction:column;gap:var(--space-6)">
+    <div style="display:flex;align-items:center;gap:var(--space-2)">
+      <div style="width:40px;height:40px;border-radius:var(--radius-lg);background:var(--color-accent);display:grid;place-items:center;font-size:22px"><i class="ph-duotone ph-book-open-text"></i></div>
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:22px">Libro de Clases 3.0</span>
+    </div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:var(--space-3);max-width:520px">
+      <h1 style="font-size:48px;margin:0;color:var(--color-neutral-100)">El libro de clases de tu colegio, en un solo lugar.</h1>
+      <p style="font-size:18px;color:var(--color-accent-200);margin:0;text-wrap:pretty">Registro de clases, asistencia, calificaciones y antecedentes de cada estudiante.</p>
+    </div>
+  </div>
+  <div style="display:grid;place-items:center;padding:var(--space-8)">
+    <div style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:var(--space-4)">
+      <div>
+        <h2 style="margin:0 0 4px">Iniciar sesión</h2>
+        <div style="font-size:14px;color:var(--color-neutral-700)">Ingresa con tu usuario y contraseña.</div>
+      </div>
+      <div class="field"><label>Usuario</label><input class="input" placeholder="usuario" value="{{ user }}" onChange="{{ setUser }}"></div>
+      <div class="field"><label>Contraseña</label><input class="input" type="password" placeholder="••••••••" value="{{ pass }}" onChange="{{ setPass }}"></div>
+      <button class="btn btn-primary" style="padding:12px;font-size:15px" onClick="{{ login }}">Ingresar</button>
+      <div style="font-size:12px;color:var(--color-neutral-700);text-align:center">Liceo Pablo Neruda · Año escolar 2026</div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showApp }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:252px minmax(0,1fr);min-height:100vh;font-family:var(--font-body);color:var(--color-text);background:var(--color-bg)">
+
+  <aside style="position:sticky;top:0;height:100vh;overflow:auto;background:var(--color-accent-900);color:var(--color-neutral-100);padding:var(--space-4) var(--space-3);display:flex;flex-direction:column;gap:var(--space-4)">
+    <div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2);border-radius:var(--radius-lg);background:var(--color-accent-800)">
+      <div style="width:36px;height:36px;border-radius:var(--radius-lg);background:var(--color-accent);display:grid;place-items:center;font-size:20px;flex:none"><i class="ph-duotone ph-book-open-text"></i></div>
+      <div style="display:flex;flex-direction:column;line-height:1.15">
+        <span style="font-family:var(--font-heading);font-weight:600;font-size:16px">Libro de Clases 3.0</span>
+        <span style="font-size:11px;color:var(--color-accent-300)">Liceo Pablo Neruda</span>
+      </div>
+    </div>
+    <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="3">
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent-300);padding:0 var(--space-2) 4px">{{ g.title }}</div>
+        <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+          <button onClick="{{ it.go }}" style="display:flex;align-items:center;gap:var(--space-2);padding:7px var(--space-2);border:0;border-radius:var(--radius-lg);background:{{ it.bg }};color:var(--color-neutral-100);font-family:var(--font-body);font-size:14px;text-align:left;cursor:pointer;width:100%" style-hover="background:var(--color-accent-700)">
+            <span style="width:26px;height:26px;border-radius:var(--radius-md);background:var(--color-accent-800);display:grid;place-items:center;font-size:16px;flex:none"><i class="ph-duotone {{ it.icon }}"></i></span>
+            <span style="flex:1">{{ it.label }}</span>
+            <sc-if value="{{ it.badge }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;padding:1px 7px;border-radius:var(--radius-md);background:var(--color-accent-2);color:var(--color-neutral-100)">{{ it.badge }}</span></sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </sc-for>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:var(--space-2)">
+      <div style="font-size:11px;color:var(--color-accent-300);padding:0 var(--space-2)">Libro de Clases 3.0 · 2026</div>
+      <button onClick="{{ logout }}" style="display:flex;align-items:center;gap:var(--space-2);padding:10px var(--space-2);border:1px solid var(--color-accent-700);border-radius:var(--radius-lg);background:transparent;color:var(--color-neutral-100);font-family:var(--font-body);font-size:14px;cursor:pointer" style-hover="background:var(--color-accent-800)"><i class="ph-duotone ph-sign-out" style="font-size:18px"></i>Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <div style="min-width:0;display:flex;flex-direction:column">
+    <header style="position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-6);background:var(--color-neutral-100);box-shadow:var(--shadow-sm)">
+      <div style="display:flex;flex-direction:column;line-height:1.2;min-width:0">
+        <span style="font-size:12px;color:var(--color-neutral-700)">{{ crumb }}</span>
+        <span style="font-family:var(--font-heading);font-weight:600;font-size:19px;white-space:nowrap">{{ title }}</span>
+      </div>
+      <div style="flex:1"></div>
+      <sc-if value="{{ hasClass }}" hint-placeholder-val="{{ false }}"><button class="btn btn-secondary" onClick="{{ go.clases }}" title="Cambiar de clase"><i class="ph-duotone ph-chalkboard-teacher" style="font-size:18px;color:var(--color-accent)"></i>{{ clsLabel }}<i class="ph-duotone ph-arrows-left-right" style="color:var(--color-neutral-700)"></i></button></sc-if>
+      <button class="btn btn-secondary btn-icon" title="Notificaciones" style="font-size:18px;position:relative"><i class="ph-duotone ph-bell"></i><span style="position:absolute;top:6px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--color-accent-2)"></span></button>
+      <div style="display:flex;align-items:center;gap:var(--space-2);padding:4px 12px 4px 4px;border-radius:999px;background:var(--color-neutral-200)">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--color-accent);color:var(--color-neutral-100);display:grid;place-items:center;font-weight:600;font-size:12px">RG</div>
+        <span style="font-size:14px;white-space:nowrap">Robin González</span>
+      </div>
+    </header>
+
+    <main style="padding:var(--space-4) var(--space-6) var(--space-8);display:flex;flex-direction:column;gap:var(--space-4)">
+
+      <sc-if value="{{ s.clases }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Mis clases" style="display:flex;flex-direction:column;gap:var(--space-4)">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);padding:var(--space-6);border-radius:var(--radius-lg);background:var(--color-accent-800);color:var(--color-neutral-100)">
+          <div style="flex:1;min-width:260px">
+            <h2 style="margin:0;color:var(--color-neutral-100)">Hola, Robin González</h2>
+            <div style="font-size:15px;color:var(--color-accent-200)">Elige una de tus clases para trabajar o crea una nueva.</div>
+          </div>
+          <button class="btn" style="background:var(--color-neutral-100);color:var(--color-accent-800)" onClick="{{ openDlg }}"><i class="ph-duotone ph-plus-circle" style="font-size:18px"></i>Crear clase</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--space-3)">
+          <sc-for list="{{ classCards }}" as="c" hint-placeholder-count="3">
+            <div style="display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm)">
+              <div style="display:flex;align-items:flex-start;gap:var(--space-3)">
+                <span style="width:44px;height:44px;border-radius:var(--radius-lg);background:var(--color-accent-100);color:var(--color-accent-700);display:grid;place-items:center;font-size:22px;flex:none"><i class="ph-duotone {{ c.icon }}"></i></span>
+                <div style="flex:1;min-width:0"><div style="font-family:var(--font-heading);font-weight:600;font-size:18px;line-height:1.2">{{ c.subject }}</div><div style="font-size:14px;color:var(--color-neutral-700)">{{ c.course }}</div></div>
+                <sc-if value="{{ c.pending }}" hint-placeholder-val="{{ false }}"><span class="tag tag-accent-2">{{ c.pendingLabel }}</span></sc-if>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.4;color:var(--color-neutral-800)">
+                <div style="display:flex;align-items:flex-start;gap:6px"><i class="ph-duotone ph-clock" style="color:var(--color-accent);margin-top:2px;flex:none"></i><span style="min-width:0">{{ c.sched }}</span></div>
+                <div style="display:flex;align-items:flex-start;gap:6px"><i class="ph-duotone ph-student" style="color:var(--color-accent);margin-top:2px;flex:none"></i><span style="min-width:0">{{ c.meta }}</span></div>
+              </div>
+              <button class="btn btn-primary" onClick="{{ c.open }}">Abrir clase<i class="ph-duotone ph-arrow-right"></i></button>
+            </div>
+          </sc-for>
+          <button onClick="{{ openDlg }}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-2);min-height:200px;border:1.5px dashed var(--color-neutral-400);border-radius:var(--radius-lg);background:transparent;color:var(--color-accent-700);font-family:var(--font-body);font-size:15px;cursor:pointer" style-hover="background:var(--color-accent-100)"><i class="ph-duotone ph-plus-circle" style="font-size:30px"></i>Crear nueva clase</button>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ s.inicio }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Inicio" style="display:flex;flex-direction:column;gap:var(--space-4)">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);padding:var(--space-6);border-radius:var(--radius-lg);background:var(--color-accent-800);color:var(--color-neutral-100)">
+          <div style="flex:1;min-width:260px">
+            <h2 style="margin:0;color:var(--color-neutral-100)">Hola, Robin González</h2>
+            <div style="font-size:15px;color:var(--color-accent-200)">{{ clsLabel }} · Viernes 2 de octubre de 2026</div>
+          </div>
+          <button class="btn" style="background:var(--color-neutral-100);color:var(--color-accent-800)" onClick="{{ go.asistencia }}"><i class="ph-duotone ph-check-square-offset" style="font-size:18px"></i>Tomar asistencia</button>
+          <button class="btn" style="border-color:var(--color-accent-400);color:var(--color-neutral-100)" onClick="{{ go.libro }}"><i class="ph-duotone ph-signature" style="font-size:18px"></i>Firmar clases</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--space-3)">
+          <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+            <div style="display:flex;gap:var(--space-3);align-items:center;padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm)">
+              <div style="width:46px;height:46px;border-radius:50%;background:{{ k.bg }};color:{{ k.fg }};display:grid;place-items:center;font-size:22px;flex:none"><i class="ph-duotone {{ k.icon }}"></i></div>
+              <div style="display:flex;flex-direction:column;line-height:1.25">
+                <span style="font-size:13px;line-height:1.3;white-space:nowrap;color:var(--color-neutral-700)">{{ k.label }}</span>
+                <span style="font-family:var(--font-heading);font-weight:600;font-size:26px;line-height:1.1">{{ k.value }}</span>
+                <span style="font-size:12px;color:{{ k.fg }}">{{ k.note }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:var(--space-3)">
+          <div style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm)">
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:17px">Asistencia de los últimos 10 días</div>
+            <div style="font-size:13px;color:var(--color-neutral-700);margin-bottom:var(--space-3)">Porcentaje diario del curso</div>
+            <svg viewBox="0 0 640 220" style="width:100%;height:auto;display:block">
+              <sc-for list="{{ chart.grid }}" as="gl" hint-placeholder-count="4">
+                <line x1="40" x2="630" y1="{{ gl.y }}" y2="{{ gl.y }}" stroke="var(--color-neutral-300)" stroke-dasharray="3 4"></line>
+                <text x="0" y="{{ gl.ty }}" font-size="11" fill="var(--color-neutral-700)">{{ gl.label }}</text>
+              </sc-for>
+              <path d="{{ chart.area }}" fill="var(--color-accent-200)" opacity="0.6"></path>
+              <path d="{{ chart.line }}" fill="none" stroke="var(--color-accent)" stroke-width="2.5"></path>
+              <sc-for list="{{ chart.pts }}" as="p" hint-placeholder-count="10">
+                <circle cx="{{ p.x }}" cy="{{ p.y }}" r="3.5" fill="var(--color-neutral-100)" stroke="var(--color-accent)" stroke-width="2"></circle>
+                <text x="{{ p.x }}" y="214" font-size="11" text-anchor="middle" fill="var(--color-neutral-700)">{{ p.label }}</text>
+              </sc-for>
+            </svg>
+          </div>
+          <div style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);display:flex;flex-direction:column">
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:17px">Asistencia de hoy</div>
+            <div style="font-size:13px;color:var(--color-neutral-700)">{{ course }} · {{ students.length }} estudiantes</div>
+            <div style="position:relative;width:170px;height:170px;margin:var(--space-4) auto">
+              <svg viewBox="0 0 120 120" style="width:100%;height:100%;transform:rotate(-90deg)">
+                <circle cx="60" cy="60" r="48" fill="none" stroke="var(--color-neutral-200)" stroke-width="14"></circle>
+                <sc-for list="{{ donut }}" as="d" hint-placeholder-count="3">
+                  <circle cx="60" cy="60" r="48" fill="none" stroke="{{ d.color }}" stroke-width="14" stroke-dasharray="{{ d.dash }}" stroke-dashoffset="{{ d.offset }}"></circle>
+                </sc-for>
+              </svg>
+              <div style="position:absolute;inset:0;display:grid;place-items:center;text-align:center;line-height:1.1"><div><div style="font-family:var(--font-heading);font-weight:600;font-size:30px">{{ todayPct }}</div><div style="font-size:12px;color:var(--color-neutral-700)">presentes</div></div></div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);justify-content:center;font-size:13px">
+              <sc-for list="{{ donut }}" as="d" hint-placeholder-count="3">
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:{{ d.color }}"></span>{{ d.label }} {{ d.n }}</span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-3)">
+          <div style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm)">
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:17px;margin-bottom:var(--space-2)">Horario de hoy</div>
+            <sc-for list="{{ lessons }}" as="l" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:1px solid var(--color-neutral-200)">
+                <span style="font-size:13px;color:var(--color-neutral-700);width:96px;flex:none">{{ l.time }}</span>
+                <span style="flex:1;font-size:15px">{{ l.name }}</span>
+                <span class="tag {{ l.tagClass }}">{{ l.status }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm)">
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:17px;margin-bottom:var(--space-2)">Próximas actividades</div>
+            <sc-for list="{{ upcoming }}" as="e" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:1px solid var(--color-neutral-200)">
+                <div style="width:44px;flex:none;text-align:center;line-height:1.05"><div style="font-family:var(--font-heading);font-weight:600;font-size:20px">{{ e.day }}</div><div style="font-size:11px;color:var(--color-neutral-700)">OCT</div></div>
+                <div style="flex:1"><div style="font-size:15px">{{ e.title }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ e.sub }}</div></div>
+                <span class="tag {{ e.tagClass }}">{{ e.kind }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ s.estudiantes }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Estudiantes" style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:var(--space-3)">
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center">
+          <div style="position:relative;flex:1;min-width:220px;max-width:360px">
+            <i class="ph-duotone ph-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--color-neutral-700)"></i>
+            <input class="input" placeholder="Buscar por nombre o RUT" value="{{ query }}" onInput="{{ setQuery }}" style="padding-left:32px">
+          </div>
+          <span style="font-size:13px;color:var(--color-neutral-700)">{{ filtered.length }} estudiantes</span>
+          <div style="flex:1"></div>
+          <button class="btn btn-secondary"><i class="ph-duotone ph-file-xls" style="font-size:18px"></i>Exportar</button>
+          <button class="btn btn-primary"><i class="ph-duotone ph-user-plus" style="font-size:18px"></i>Matricular</button>
+        </div>
+        <div style="overflow:auto">
+        <table class="table">
+          <thead><tr><th>N°</th><th>Estudiante</th><th>RUN</th><th>Nacimiento</th><th>Asistencia</th><th>Promedio</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            <sc-for list="{{ filtered }}" as="st" hint-placeholder-count="10">
+              <tr>
+                <td style="color:var(--color-neutral-700)">{{ st.n }}</td>
+                <td><div style="display:flex;align-items:center;gap:var(--space-2)"><span style="width:30px;height:30px;border-radius:50%;background:var(--color-accent-100);color:var(--color-accent-800);display:grid;place-items:center;font-size:11px;font-weight:600;flex:none">{{ st.ini }}</span>{{ st.name }}</div></td>
+                <td>{{ st.rut }}</td>
+                <td>{{ st.birth }}</td>
+                <td style="color:{{ st.attColor }}">{{ st.attLabel }}</td>
+                <td style="color:{{ st.avgColor }};font-weight:600">{{ st.avgLabel }}</td>
+                <td><span class="tag {{ st.tagClass }}">{{ st.status }}</span></td>
+                <td><button class="btn btn-ghost" onClick="{{ st.open }}">Ficha</button></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ s.familiares }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Antecedentes familiares" style="display:grid;grid-template-columns:260px minmax(0,1fr);gap:var(--space-3);align-items:start">
+        <div style="padding:var(--space-2);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:2px;max-height:72vh;overflow:auto">
+          <sc-for list="{{ students }}" as="st" hint-placeholder-count="10">
+            <button onClick="{{ st.select }}" style="display:flex;align-items:center;gap:var(--space-2);padding:8px;border:0;border-radius:var(--radius-md);background:{{ st.selBg }};color:var(--color-text);font-family:var(--font-body);font-size:14px;text-align:left;cursor:pointer" style-hover="background:var(--color-accent-100)">
+              <span style="font-size:12px;color:var(--color-neutral-700);width:20px">{{ st.n }}</span>{{ st.name }}
+            </button>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <div style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:center">
+            <span style="width:56px;height:56px;border-radius:50%;background:var(--color-accent);color:var(--color-neutral-100);display:grid;place-items:center;font-size:18px;font-weight:600">{{ sel.ini }}</span>
+            <div style="flex:1;min-width:200px"><div style="font-family:var(--font-heading);font-weight:600;font-size:22px">{{ sel.name }}</div><div style="font-size:13px;color:var(--color-neutral-700)">RUN {{ sel.rut }} · Nacido el {{ sel.birth }} · {{ course }}</div></div>
+            <button class="btn btn-secondary"><i class="ph-duotone ph-pencil-simple" style="font-size:18px"></i>Editar</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--space-3)">
+            <sc-for list="{{ family }}" as="f" hint-placeholder-count="4">
+              <div style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:var(--space-2)">
+                <div style="display:flex;align-items:center;gap:var(--space-2)"><i class="ph-duotone {{ f.icon }}" style="font-size:20px;color:var(--color-accent)"></i><span style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-neutral-700);flex:1">{{ f.role }}</span><sc-if value="{{ f.main }}" hint-placeholder-val="{{ false }}"><span class="tag tag-accent">Titular</span></sc-if></div>
+                <div style="font-size:17px;font-weight:600">{{ f.name }}</div>
+                <sc-for list="{{ f.rows }}" as="r" hint-placeholder-count="3">
+                  <div style="display:flex;gap:var(--space-2);font-size:14px"><span style="color:var(--color-neutral-700);width:96px;flex:none">{{ r.k }}</span><span>{{ r.v }}</span></div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ s.libro }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Libro de clases" style="display:flex;flex-direction:column;gap:var(--space-3)">
+        <div style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:var(--space-3)">
+          <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center">
+            <div style="flex:1"><div style="font-family:var(--font-heading);font-weight:600;font-size:18px">{{ subject.name }}</div><div style="font-size:13px;color:var(--color-neutral-700)">{{ subject.teacher }} · {{ subject.hours }} horas semanales</div></div>
+            <span class="tag tag-accent-2">{{ pendingLabel }}</span>
+            <button class="btn btn-primary" onClick="{{ toggleForm }}"><i class="ph-duotone ph-plus" style="font-size:18px"></i>Registrar clase</button>
+          </div>
+          <sc-if value="{{ formOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:160px 140px minmax(0,1fr) auto;gap:var(--space-2);align-items:end;padding:var(--space-3);border-radius:var(--radius-lg);background:var(--color-accent-100)">
+              <div class="field"><label>Fecha</label><input class="input" value="02/10/2026" readOnly="{{ true }}"></div>
+              <div class="field"><label>Bloque</label><select class="input"><option>1° y 2° bloque</option><option>3° y 4° bloque</option><option>5° y 6° bloque</option></select></div>
+              <div class="field"><label>Objetivo de aprendizaje y actividad</label><input class="input" placeholder="OA 3 · Describe la actividad realizada" value="{{ draft }}" onInput="{{ setDraft }}"></div>
+              <button class="btn btn-primary" onClick="{{ saveLesson }}">Guardar</button>
+            </div>
+          </sc-if>
+          <div style="overflow:auto">
+          <table class="table">
+            <thead><tr><th>Fecha</th><th>Bloque</th><th>Objetivo / actividad</th><th>Asist.</th><th>Firma</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ lessonRows }}" as="lr" hint-placeholder-count="6">
+                <tr>
+                  <td style="white-space:nowrap">{{ lr.date }}</td>
+                  <td style="white-space:nowrap;color:var(--color-neutral-700)">{{ lr.block }}</td>
+                  <td>{{ lr.topic }}</td>
+                  <td>{{ lr.att }}</td>
+                  <td><sc-if value="{{ lr.signed }}" hint-placeholder-val="{{ true }}"><span class="tag tag-accent"><i class="ph-duotone ph-seal-check" style="margin-right:4px"></i>Firmada</span></sc-if><sc-if value="{{ lr.unsigned }}" hint-placeholder-val="{{ false }}"><button class="btn btn-secondary" style="padding:4px 10px;font-size:13px" onClick="{{ lr.sign }}"><i class="ph-duotone ph-signature"></i>Firmar</button></sc-if></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ s.asistencia }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Asistencia" style="display:flex;flex-direction:column;gap:var(--space-3)">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--space-3)">
+          <sc-for list="{{ donut }}" as="d" hint-placeholder-count="3">
+            <div style="padding:var(--space-3) var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:var(--space-3)"><span style="width:12px;height:12px;border-radius:50%;background:{{ d.color }}"></span><span style="flex:1;font-size:14px">{{ d.label }}</span><span style="font-family:var(--font-heading);font-weight:600;font-size:24px">{{ d.n }}</span></div>
+          </sc-for>
+        </div>
+        <div style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:var(--space-3)">
+          <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center">
+            <div style="flex:1"><div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Viernes 2 de octubre · 1° bloque</div><div style="font-size:13px;color:var(--color-neutral-700)">Marca a cada estudiante. Se guarda automáticamente.</div></div>
+            <button class="btn btn-secondary" onClick="{{ allPresent }}"><i class="ph-duotone ph-checks" style="font-size:18px"></i>Todos presentes</button>
+            <button class="btn btn-primary"><i class="ph-duotone ph-signature" style="font-size:18px"></i>Cerrar y firmar</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:var(--space-2)">
+            <sc-for list="{{ attRows }}" as="ar" hint-placeholder-count="10">
+              <div style="display:flex;align-items:center;gap:var(--space-2);padding:8px var(--space-2);border-radius:var(--radius-md);background:var(--color-bg)">
+                <span style="font-size:12px;color:var(--color-neutral-700);width:20px">{{ ar.n }}</span>
+                <span style="flex:1;font-size:14px">{{ ar.name }}</span>
+                <sc-for list="{{ ar.opts }}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{ o.pick }}" title="{{ o.title }}" style="width:34px;height:30px;border-radius:var(--radius-md);border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.fg }};font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer">{{ o.label }}</button>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ s.actividades }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Actividades" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:var(--space-3);align-items:start">
+        <div style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm)">
+          <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)"><div style="font-family:var(--font-heading);font-weight:600;font-size:18px;flex:1">Octubre 2026</div><button class="btn btn-secondary btn-icon"><i class="ph-duotone ph-caret-left"></i></button><button class="btn btn-secondary btn-icon"><i class="ph-duotone ph-caret-right"></i></button></div>
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px">
+            <sc-for list="{{ weekdays }}" as="w" hint-placeholder-count="7"><div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-neutral-700);padding:4px">{{ w }}</div></sc-for>
+            <sc-for list="{{ calCells }}" as="c" hint-placeholder-count="35">
+              <div style="min-height:84px;min-width:0;overflow:hidden;padding:6px;border-radius:var(--radius-md);background:{{ c.bg }};display:flex;flex-direction:column;gap:3px">
+                <span style="font-size:13px;color:{{ c.fg }};font-weight:{{ c.weight }}">{{ c.d }}</span>
+                <sc-for list="{{ c.events }}" as="ev" hint-placeholder-count="0"><span style="font-size:11px;line-height:1.2;padding:2px 5px;border-radius:var(--radius-sm);background:{{ ev.bg }};color:{{ ev.fg }}">{{ ev.title }}</span></sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm)">
+          <div style="display:flex;align-items:center;margin-bottom:var(--space-2)"><div style="font-family:var(--font-heading);font-weight:600;font-size:17px;flex:1">Este mes</div><button class="btn btn-ghost"><i class="ph-duotone ph-plus"></i>Nueva</button></div>
+          <sc-for list="{{ upcoming }}" as="e" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:1px solid var(--color-neutral-200)">
+              <div style="width:40px;flex:none;text-align:center;line-height:1.05"><div style="font-family:var(--font-heading);font-weight:600;font-size:20px">{{ e.day }}</div><div style="font-size:11px;color:var(--color-neutral-700)">OCT</div></div>
+              <div style="flex:1"><div style="font-size:14px">{{ e.title }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ e.sub }}</div></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ s.calificaciones }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Calificaciones" style="display:flex;flex-direction:column;gap:var(--space-3)">
+        <div style="padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:var(--space-3)">
+          <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center">
+            <div style="flex:1"><div style="font-family:var(--font-heading);font-weight:600;font-size:18px">{{ subject.name }} · Segundo semestre</div><div style="font-size:13px;color:var(--color-neutral-700)">Escala 1,0 a 7,0 · Nota mínima de aprobación 4,0</div></div>
+            <span style="font-size:14px">Promedio del curso <strong style="color:{{ gradeAvgColor }}">{{ gradeAvg }}</strong></span>
+            <button class="btn btn-primary"><i class="ph-duotone ph-plus" style="font-size:18px"></i>Nueva evaluación</button>
+          </div>
+          <div style="overflow:auto">
+          <table class="table">
+            <thead><tr><th>N°</th><th>Estudiante</th><sc-for list="{{ evalCols }}" as="ec" hint-placeholder-count="5"><th style="text-align:center" title="{{ ec.title }}">{{ ec.label }}</th></sc-for><th style="text-align:center">Promedio</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ gradeRows }}" as="gr" hint-placeholder-count="10">
+                <tr>
+                  <td style="color:var(--color-neutral-700)">{{ gr.n }}</td>
+                  <td>{{ gr.name }}</td>
+                  <sc-for list="{{ gr.cells }}" as="gc" hint-placeholder-count="5"><td style="text-align:center;color:{{ gc.color }}">{{ gc.v }}</td></sc-for>
+                  <td style="text-align:center"><span style="display:inline-block;min-width:44px;padding:2px 8px;border-radius:var(--radius-md);background:{{ gr.avgBg }};color:{{ gr.avgFg }};font-weight:600">{{ gr.avg }}</span></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ dlg }}" hint-placeholder-val="{{ false }}">
+        <div class="dialog-backdrop" style="z-index:20" onClick="{{ closeDlg }}">
+          <div class="dialog" onClick="{{ stop }}">
+            <div class="dialog-title">Crear clase</div>
+            <div class="dialog-body" style="opacity:1;display:flex;flex-direction:column;gap:var(--space-3)">
+              <div class="field"><label>Curso</label><select class="input" value="{{ nCourse }}" onChange="{{ setNCourse }}"><sc-for list="{{ courseOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o }}">{{ o }}</option></sc-for></select></div>
+              <div class="field"><label>Asignatura</label><select class="input" value="{{ nSubj }}" onChange="{{ setNSubj }}"><sc-for list="{{ subjOpts }}" as="o" hint-placeholder-count="10"><option value="{{ o.id }}">{{ o.name }}</option></sc-for></select></div>
+              <div class="field"><label>Horario</label><input class="input" placeholder="Lun 08:00 · Mié 11:30" value="{{ nSched }}" onInput="{{ setNSched }}"></div>
+            </div>
+            <div class="dialog-actions"><button class="btn btn-secondary" onClick="{{ closeDlg }}">Cancelar</button><button class="btn btn-primary" onClick="{{ createClass }}">Crear clase</button></div>
+          </div>
+        </div>
+      </sc-if>
+
+    </main>
+  </div>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const names = ['Agustina Araya Soto','Benjamín Bravo Muñoz','Catalina Cárdenas Rojas','Diego Espinoza Vera','Florencia Fuentes Díaz','Gaspar González Pino','Isidora Henríquez Lagos','Joaquín Jara Salinas','Martina Leiva Torres','Matías Morales Cid','Antonella Núñez Pérez','Tomás Orellana Ríos','Sofía Pizarro Vidal','Vicente Quezada Mora','Emilia Reyes Contreras','Lucas Sepúlveda Ortiz'];
+    let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    this.students = names.map((name, i) => {
+      const parts = name.split(' ');
+      return { id: i, n: i + 1, name, first: parts[0], last: parts[1], last2: parts[2], ini: parts[0][0] + parts[1][0],
+        rut: (21 + Math.floor(rnd() * 3)) + '.' + (100 + Math.floor(rnd() * 899)) + '.' + (100 + Math.floor(rnd() * 899)) + '-' + Math.floor(rnd() * 10),
+        birth: String(1 + Math.floor(rnd() * 27)).padStart(2, '0') + '/' + String(1 + Math.floor(rnd() * 12)).padStart(2, '0') + '/2010',
+        att: i === 3 ? 78 : i === 11 ? 83 : 88 + Math.floor(rnd() * 12) };
+    });
+    this.subjects = [
+      ['Lengua y Literatura','Carolina Muñoz',6],['Matemática','Robin González',7],['Inglés','Paula Henríquez',4],['Historia, Geografía y Cs. Sociales','Andrés Tapia',4],
+      ['Biología','Valentina Rojas',2],['Química','Valentina Rojas',2],['Física','Marcelo Fuentes',2],['Educación Física y Salud','Pablo Aguilante',2],
+      ['Artes Visuales','Lissette Acosta',2],['Música','Sin profesor asignado',2],['Tecnología','Ignacio Vera',2],['Orientación','Robin González',1]
+    ].map(([name, teacher, hours], i) => ({ id: i, name, teacher, hours }));
+    this.grades = {};
+    this.subjects.forEach(sb => { this.grades[sb.id] = this.students.map(st => Array.from({ length: 5 }, (_, k) => k === 4 && sb.id % 3 === 0 ? null : Math.max(2.5, Math.min(7, Math.round((3.6 + rnd() * 3.4 + (st.att < 85 ? -0.8 : 0)) * 10) / 10)))); });
+    const topics = ['OA 3 · Resolución de ecuaciones cuadráticas por factorización','OA 3 · Función cuadrática: gráfico y vértice','OA 2 · Evaluación sumativa: potencias y raíces','OA 2 · Racionalización de expresiones','OA 1 · Números reales en la recta numérica','OA 1 · Guía de ejercicios en parejas'];
+    const dates = ['02/10/2026','01/10/2026','30/09/2026','29/09/2026','25/09/2026','24/09/2026'];
+    this.makeLessons = (sb, cid) => dates.map((d, k) => ({ id: cid + '-' + k, date: d, block: k % 2 ? '3° y 4° bloque' : '1° y 2° bloque', topic: sb.id === 1 ? topics[k] : 'Unidad 3 · Clase ' + (18 - k) + ' de ' + sb.name, att: (14 + (k % 3)) + '/16', signed: k > 2 }));
+    const classes = [{ id: 'c1', subj: 1, course: '2° Medio A', sched: 'Lun y Mié 08:00 · Vie 11:30' }, { id: 'c2', subj: 1, course: '1° Medio A', sched: 'Mar y Jue 09:45' }, { id: 'c3', subj: 11, course: '2° Medio A', sched: 'Vie 09:45' }];
+    const lessons = {}; classes.forEach(c => lessons[c.id] = this.makeLessons(this.subjects[c.subj], c.id));
+    const att = {}; this.students.forEach(st => att[st.id] = (st.id === 3 || st.id === 8) ? 'A' : st.id === 11 ? 'T' : 'P');
+    this.events = [
+      { day: 5, title: 'Prueba de Matemática', sub: 'Función cuadrática · 2° bloque', kind: 'Evaluación' },
+      { day: 8, title: 'Reunión de apoderados', sub: '19:00 · Sala 12', kind: 'Reunión' },
+      { day: 9, title: 'Entrega ensayo Lenguaje', sub: 'Plataforma o impreso', kind: 'Entrega' },
+      { day: 12, title: 'Feriado: Encuentro de Dos Mundos', sub: 'Sin clases', kind: 'Feriado' },
+      { day: 16, title: 'Salida pedagógica', sub: 'Museo Regional de la Araucanía', kind: 'Salida' },
+      { day: 23, title: 'Prueba de Historia', sub: 'Unidad 3', kind: 'Evaluación' },
+      { day: 30, title: 'Cierre de notas parcial', sub: 'Plazo para docentes', kind: 'Plazo' }
+    ];
+    this.state = { logged: false, user: '', pass: '', screen: 'clases', classes, cls: null, dlg: false, nCourse: '2° Medio B', nSubj: '1', nSched: '', query: '', sel: 0, att, formOpen: false, draft: '', lessons };
+  }
+  avg(arr) { const v = arr.filter(x => x != null); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length * 10) / 10 : null; }
+  fmt(n) { return n == null ? '—' : n.toFixed(1).replace('.', ','); }
+  renderVals() {
+    const S = this.state, set = o => this.setState(o);
+    const active = S.classes.find(c => c.id === S.cls);
+    const subjIdx = active ? active.subj : 1, CK = active ? active.id : null, LS = CK ? S.lessons[CK] : [];
+    const clsLabel = active ? this.subjects[active.subj].name + ' · ' + active.course : '';
+    const screens = { clases: ['Mis clases','Inicio'], inicio: ['Resumen de la clase', clsLabel], indice: ['Portada e índice','Libro de clases'], estudiantes: ['Lista de estudiantes','Curso'], familiares: ['Antecedentes familiares','Curso'], asignaturas: ['Asignaturas','Curso'], libro: ['Registro de clases','Libro de clases'], asistencia: ['Listado de asistencia','Libro de clases'], actividades: ['Calendario de actividades','Libro de clases'], calificaciones: ['Calificaciones','Libro de clases'] };
+    const go = {}, s = {};
+    Object.keys(screens).forEach(k => { go[k] = () => set({ screen: k }); s[k] = S.screen === k; });
+    const unsigned = LS.filter(l => !l.signed).length;
+    Object.keys(screens).forEach(k => { if (k !== 'clases' && k !== 'inicio') screens[k] = [screens[k][0], clsLabel]; });
+    const item = (k, label, icon, badge) => ({ label, icon, badge: badge || '', go: go[k], bg: S.screen === k ? 'var(--color-accent)' : 'transparent' });
+    const navGroups = [{ title: 'General', items: [item('clases','Mis clases','ph-chalkboard-teacher')] }];
+    if (active) navGroups.push({ title: 'Mi clase · ' + active.course, items: [item('inicio','Resumen','ph-squares-four'), item('libro','Registro de clases','ph-notebook', unsigned ? String(unsigned) : ''), item('asistencia','Asistencia','ph-check-square-offset'), item('calificaciones','Calificaciones','ph-exam'), item('actividades','Actividades','ph-calendar-dots')] }, { title: 'Estudiantes', items: [item('estudiantes','Lista de estudiantes','ph-student'), item('familiares','Antecedentes familiares','ph-users-three')] });
+    const studentAvg = st => this.avg(this.subjects.map(sb => this.avg(this.grades[sb.id][st.id])));
+    const students = this.students.map(st => {
+      const a = studentAvg(st), risk = st.att < 85, low = a < 4.8;
+      return { ...st, attLabel: st.att + '%', attColor: risk ? 'var(--color-accent-2-700)' : 'var(--color-text)', avgLabel: this.fmt(a), avgColor: a < 4 ? 'var(--color-accent-2-700)' : 'var(--color-text)',
+        status: risk ? 'Riesgo asistencia' : low ? 'Seguimiento' : 'Regular', tagClass: risk ? 'tag-accent-2' : low ? 'tag-neutral' : 'tag-accent',
+        open: () => set({ sel: st.id, screen: 'familiares' }), select: () => set({ sel: st.id }), selBg: S.sel === st.id ? 'var(--color-accent-100)' : 'transparent' };
+    });
+    const q = S.query.trim().toLowerCase();
+    const filtered = students.filter(st => !q || st.name.toLowerCase().includes(q) || st.rut.includes(q));
+    const sel = students[S.sel];
+    const phone = k => '+56 9 ' + (8000 + S.sel * 37 + k * 11) + ' ' + (1000 + S.sel * 53 + k * 7);
+    const family = [
+      { role: 'Apoderado titular', icon: 'ph-user-circle', main: true, name: (S.sel % 2 ? 'Marcela ' : 'Patricia ') + sel.last2 + ' ' + (S.sel % 3 ? 'Vidal' : 'Lagos'), rows: [{ k: 'Parentesco', v: 'Madre' }, { k: 'Teléfono', v: phone(1) }, { k: 'Correo', v: sel.first.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') + '.apoderado@correo.cl' }, { k: 'Ocupación', v: 'Técnico en enfermería' }] },
+      { role: 'Apoderado suplente', icon: 'ph-user', main: false, name: (S.sel % 2 ? 'Jorge ' : 'Luis ') + sel.last + ' ' + (S.sel % 3 ? 'Mora' : 'Cid'), rows: [{ k: 'Parentesco', v: 'Padre' }, { k: 'Teléfono', v: phone(2) }, { k: 'Ocupación', v: 'Conductor' }] },
+      { role: 'Domicilio', icon: 'ph-house-line', main: false, name: 'Av. Alemania ' + (1200 + S.sel * 41), rows: [{ k: 'Comuna', v: 'Temuco' }, { k: 'Región', v: 'La Araucanía' }, { k: 'Vive con', v: 'Madre, padre y 1 hermano' }] },
+      { role: 'Salud y programas', icon: 'ph-first-aid-kit', main: false, name: S.sel % 4 === 0 ? 'Asma leve' : 'Sin antecedentes', rows: [{ k: 'Previsión', v: S.sel % 2 ? 'Fonasa B' : 'Fonasa C' }, { k: 'Prioritario', v: S.sel % 3 === 0 ? 'Sí' : 'No' }, { k: 'PIE', v: S.sel === 3 ? 'Sí' : 'No' }, { k: 'Emergencia', v: phone(3) }] }
+    ];
+    const subjectsRows = this.subjects.map(sb => {
+      const all = this.grades[sb.id].map(g => this.avg(g)); const a = this.avg(all); const done = 18 + (sb.id % 4) * 3;
+      return { n: sb.id + 1, name: sb.name, teacher: sb.teacher, teacherColor: sb.teacher.startsWith('Sin') ? 'var(--color-accent-2-700)' : 'var(--color-text)', hours: sb.hours, done: done + ' de ' + (sb.hours * 6), pct: Math.min(100, Math.round(done / (sb.hours * 6) * 100)) + '%', avg: this.fmt(a), avgColor: a < 4 ? 'var(--color-accent-2-700)' : 'var(--color-text)', open: () => set({ subj: sb.id, screen: 'calificaciones' }) };
+    });
+    const subject = this.subjects[subjIdx];
+    const lessonRows = LS.map(l => ({ ...l, unsigned: !l.signed, sign: () => this.setState(st => ({ lessons: { ...st.lessons, [CK]: st.lessons[CK].map(x => x.id === l.id ? { ...x, signed: true } : x) } })) }));
+    const pendingSign = unsigned;
+    const counts = { P: 0, A: 0, T: 0 }; Object.values(S.att).forEach(v => counts[v]++);
+    const total = this.students.length, C = 2 * Math.PI * 48;
+    const legend = [['P','Presentes','var(--color-accent)'],['T','Atrasos','var(--color-process-yellow)'],['A','Ausentes','var(--color-accent-2)']];
+    let acc = 0;
+    const donut = legend.map(([k, label, color]) => { const len = counts[k] / total * C; const d = { label, color, n: counts[k], dash: len + ' ' + (C - len), offset: -acc }; acc += len; return d; });
+    const todayPct = Math.round((counts.P + counts.T) / total * 100) + '%';
+    const optStyle = { P: ['var(--color-accent)','var(--color-neutral-100)'], T: ['var(--color-process-yellow)','var(--color-text)'], A: ['var(--color-accent-2)','var(--color-neutral-100)'] };
+    const titles = { P: 'Presente', T: 'Atrasado', A: 'Ausente' };
+    const attRows = this.students.map(st => ({ n: st.n, name: st.name, opts: ['P','T','A'].map(k => { const on = S.att[st.id] === k; return { label: k, title: titles[k], pick: () => this.setState(x => ({ att: { ...x.att, [st.id]: k } })), bg: on ? optStyle[k][0] : 'transparent', fg: on ? optStyle[k][1] : 'var(--color-neutral-700)', border: on ? optStyle[k][0] : 'var(--color-neutral-300)' }; }) }));
+    const allPresent = () => { const a = {}; this.students.forEach(st => a[st.id] = 'P'); set({ att: a }); };
+    const series = [94, 91, 96, 89, 93, 88, 95, 92, 90, Math.round((counts.P + counts.T) / total * 100)];
+    const days = ['21/09','22/09','23/09','24/09','25/09','28/09','29/09','30/09','01/10','02/10'];
+    const X = i => 60 + i * 63, Y = v => 190 - (v - 70) / 30 * 170;
+    const pts = series.map((v, i) => ({ x: X(i), y: Y(v), label: days[i] }));
+    const line = pts.map((p, i) => (i ? 'L' : 'M') + p.x + ' ' + p.y).join(' ');
+    const chart = { pts, line, area: line + ' L' + X(9) + ' 190 L' + X(0) + ' 190 Z', grid: [70, 80, 90, 100].map(v => ({ y: Y(v), ty: Y(v) + 4, label: v + '%' })) };
+    const courseAvg = this.avg(students.map(st => studentAvg(st)));
+    const kpis = [
+      { label: 'Estudiantes', value: String(total), note: '9 mujeres · 7 hombres', icon: 'ph-student', bg: 'var(--color-accent-100)', fg: 'var(--color-accent-700)' },
+      { label: 'Asistencia septiembre', value: '92,4%', note: 'Meta del establecimiento 90%', icon: 'ph-check-square-offset', bg: 'var(--color-accent-100)', fg: 'var(--color-accent-700)' },
+      { label: 'Promedio del curso', value: this.fmt(courseAvg), note: 'Segundo semestre', icon: 'ph-exam', bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-800)' },
+      { label: 'Clases sin firmar', value: String(unsigned), note: 'Plazo: hoy 23:59', icon: 'ph-signature', bg: 'var(--color-accent-2-100)', fg: 'var(--color-accent-2-700)' }
+    ];
+    const lessonsToday = [['08:00 – 09:30','Matemática','Firmada','tag-accent'],['09:45 – 11:15','Orientación','Pendiente','tag-accent-2'],['11:30 – 13:00','Matemática','Pendiente','tag-accent-2'],['14:00 – 15:30','Consejo de curso','Programada','tag-neutral']].map(([time, name, status, tagClass]) => ({ time, name, status, tagClass }));
+    const kindTag = { 'Evaluación': 'tag-accent-2', 'Feriado': 'tag-neutral', 'Reunión': 'tag-accent', 'Entrega': 'tag-accent', 'Salida': 'tag-accent', 'Plazo': 'tag-neutral' };
+    const upcoming = this.events.map(e => ({ ...e, tagClass: kindTag[e.kind] }));
+    const calCells = [];
+    for (let i = 0; i < 35; i++) {
+      const d = i - 3 + 1; const inMonth = d >= 1 && d <= 31; const dow = i % 7;
+      const evs = inMonth ? this.events.filter(e => e.day === d).map(e => ({ title: e.title, bg: e.kind === 'Evaluación' ? 'var(--color-accent-2-100)' : e.kind === 'Feriado' ? 'var(--color-neutral-200)' : 'var(--color-accent-100)', fg: e.kind === 'Evaluación' ? 'var(--color-accent-2-800)' : e.kind === 'Feriado' ? 'var(--color-neutral-800)' : 'var(--color-accent-800)' })) : [];
+      calCells.push({ d: inMonth ? d : (d < 1 ? 30 + d : d - 31), events: evs, bg: d === 2 ? 'var(--color-accent-100)' : inMonth ? 'var(--color-bg)' : 'transparent', fg: !inMonth ? 'var(--color-neutral-400)' : dow > 4 ? 'var(--color-accent-2-700)' : 'var(--color-text)', weight: d === 2 ? 600 : 400 });
+    }
+    const evalCols = [['N1','Prueba U1'],['N2','Guía evaluada'],['N3','Prueba U2'],['N4','Trabajo grupal'],['N5','Prueba U3']].map(([label, title]) => ({ label, title }));
+    const gradeRows = this.students.map(st => { const g = this.grades[subjIdx][st.id]; const a = this.avg(g); return { n: st.n, name: st.name, cells: g.map(v => ({ v: this.fmt(v), color: v != null && v < 4 ? 'var(--color-accent-2-700)' : 'var(--color-text)' })), avg: this.fmt(a), avgBg: a < 4 ? 'var(--color-accent-2-100)' : 'var(--color-accent-100)', avgFg: a < 4 ? 'var(--color-accent-2-800)' : 'var(--color-accent-800)' }; });
+    const gAvg = this.avg(this.grades[subjIdx].map(g => this.avg(g)));
+    const portada = [['Establecimiento','Liceo Pablo Neruda'],['RBD','10234-5'],['Curso',S.course],['Profesor jefe','Robin González Pérez'],['Enseñanza','Media Científico-Humanista'],['Año','2026']].map(([k, v]) => ({ k, v }));
+    const desc = { estudiantes: 'Nómina, RUN y estado de cada estudiante', familiares: 'Apoderados, domicilio y salud', asignaturas: 'Plan de estudio y profesores', libro: 'Leccionario y firma de clases', asistencia: 'Registro diario por bloque', actividades: 'Evaluaciones, reuniones y salidas', calificaciones: 'Notas por asignatura y promedios', inicio: 'Resumen del curso' };
+    const icons = { estudiantes: 'ph-student', familiares: 'ph-users-three', asignaturas: 'ph-books', libro: 'ph-notebook', asistencia: 'ph-check-square-offset', actividades: 'ph-calendar-dots', calificaciones: 'ph-exam', inicio: 'ph-squares-four' };
+    const indexCards = ['estudiantes','familiares','asignaturas','libro','asistencia','actividades','calificaciones','inicio'].map(k => ({ label: screens[k][0], desc: desc[k], icon: icons[k], go: go[k] }));
+    return {
+      showLogin: !S.logged, showApp: S.logged, user: S.user, pass: S.pass,
+      setUser: e => set({ user: e.target.value }), setPass: e => set({ pass: e.target.value }),
+      login: () => set({ logged: true, screen: 'clases' }), logout: () => set({ logged: false, pass: '' }),
+      navGroups, s, go, crumb: screens[S.screen][1], title: screens[S.screen][0],
+      course: active ? active.course : '', hasClass: !!active, clsLabel,
+      classCards: S.classes.map(c => { const p = S.lessons[c.id].filter(l => !l.signed).length; return { subject: this.subjects[c.subj].name, course: c.course, sched: c.sched || 'Horario por definir', icon: c.subj === 1 ? 'ph-function' : c.subj === 11 ? 'ph-compass' : 'ph-book-open', meta: this.students.length + ' estudiantes · ' + S.lessons[c.id].length + ' clases registradas', pending: p > 0, pendingLabel: p + ' sin firmar', open: () => set({ cls: c.id, screen: 'inicio', formOpen: false }) }; }),
+      dlg: S.dlg, openDlg: () => set({ dlg: true }), closeDlg: () => set({ dlg: false }), stop: e => e.stopPropagation(),
+      courseOpts: ['1° Medio A','1° Medio B','2° Medio A','2° Medio B','3° Medio A','4° Medio A'], subjOpts: this.subjects.map(sb => ({ id: String(sb.id), name: sb.name })),
+      nCourse: S.nCourse, nSubj: S.nSubj, nSched: S.nSched, setNCourse: e => set({ nCourse: e.target.value }), setNSubj: e => set({ nSubj: e.target.value }), setNSched: e => set({ nSched: e.target.value }),
+      createClass: () => { const id = 'c' + Date.now(); const sb = this.subjects[+S.nSubj]; this.setState(st => ({ dlg: false, nSched: '', classes: [...st.classes, { id, subj: +st.nSubj, course: st.nCourse, sched: st.nSched }], lessons: { ...st.lessons, [id]: this.makeLessons(sb, id).slice(0, 2).map(l => ({ ...l, signed: true })) } })); },
+      kpis, chart, donut, todayPct, lessons: lessonsToday, upcoming, students, filtered,
+      query: S.query, setQuery: e => set({ query: e.target.value }), sel, family,
+      portada, indexCards, subjectsRows, subject, lessonRows, pendingSign, pendingLabel: pendingSign + ' sin firmar',
+      formOpen: S.formOpen, toggleForm: () => set({ formOpen: !S.formOpen }), draft: S.draft, setDraft: e => set({ draft: e.target.value }),
+      saveLesson: () => { if (!S.draft.trim()) return; this.setState(st => ({ formOpen: false, draft: '', lessons: { ...st.lessons, [CK]: [{ id: CK + '-n' + Date.now(), date: '02/10/2026', block: '5° y 6° bloque', topic: st.draft, att: (counts.P + counts.T) + '/16', signed: false }, ...st.lessons[CK]] } })); },
+      attRows, allPresent, weekdays: ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'], calCells,
+      evalCols, gradeRows, gradeAvg: this.fmt(gAvg), gradeAvgColor: gAvg < 4 ? 'var(--color-accent-2-700)' : 'var(--color-accent-700)'
+    };
+  }
+}
+</script>
+</body>
+</html>

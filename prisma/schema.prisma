@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// Todas las tablas usan soft delete: `deletedAt` en lugar de borrar la fila.
+// src/lib/db.js filtra automáticamente los registros con deletedAt != null.
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  role      String    @default("docente")
+  tokens    Token[]
+  subjects  Subject[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("users")
+}
+
+model Token {
+  id         Int       @id @default(autoincrement())
+  // Hash SHA-256 del token; el valor en claro solo vive en la cookie del navegador.
+  tokenHash  String    @unique
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id])
+  ip         String?
+  userAgent  String?
+  expiresAt  DateTime
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  @@index([userId])
+  @@map("tokens")
+}
+
+// Materia/clase que dicta un usuario: asignatura + curso (p. ej. Matemática · 1° Medio A).
+model Subject {
+  id        Int       @id @default(autoincrement())
+  name      String
+  course    String
+  schedule  String?
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  students  Student[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId])
+  @@map("subjects")
+}
+
+model Student {
+  id             Int       @id @default(autoincrement())
+  subjectId      Int
+  subject        Subject   @relation(fields: [subjectId], references: [id])
+  listNumber     Int
+  firstName      String
+  lastName       String
+  secondLastName String?
+  rut            String?
+  birthDate      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  @@index([subjectId])
+  @@map("students")
+}
