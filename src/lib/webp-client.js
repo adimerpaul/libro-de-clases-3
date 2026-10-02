@@ -3,6 +3,7 @@
 // (EXIF/GPS), y createImageBitmap aplica antes la orientación de la cámara.
 import { PHOTO_SIDE } from "./webp";
 
+
 export const MAX_SOURCE_MB = 15;
 
 // Validación rápida antes de convertir. Devuelve el mensaje de error o null.
